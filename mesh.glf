@@ -386,10 +386,10 @@ set r3_blk3 [pw::DomainStructured createFromConnectors [list [lindex $con_flapsp
 
 #=======================================================Spliting Tails==============================
 
-set conl_tail [[lindex $con_consp 2] split [list [[lindex $con_consp 2] getParameter -arc 0.00162] [[lindex $con_consp 2] getParameter -arc 0.00192]\
-												 [[lindex $con_consp 2] getParameter -arc 0.0022]]]
+set conl_tail [[lindex $con_consp 2] split [list [[lindex $con_consp 2] getParameter -arc 0.0014541302] [[lindex $con_consp 2] getParameter -arc 0.0018864581]\
+												 [[lindex $con_consp 2] getParameter -arc 0.0023467905]]]
 
-set conu_tail [[lindex $con_consp 0] split [list [[lindex $con_consp 0] getParameter -arc 0.9978905] [[lindex $con_consp 0] getParameter -arc 0.997107]]]
+set conu_tail [[lindex $con_consp 0] split [list [[lindex $con_consp 0] getParameter -arc 0.99805124] [[lindex $con_consp 0] getParameter -arc 0.99744226]]]
 
 set end_seg [pw::SegmentSpline create]
 $end_seg addPoint [[[lindex $conu_tail 0] getNode Begin] getXYZ]
@@ -449,8 +449,8 @@ set reg2_seg5 [pw::SegmentSpline create]
 $reg2_seg5 addPoint [[$fl getNode Begin] getXYZ]
 $reg2_seg5 addPoint [[[lindex $conl_tail 1] getNode End] getXYZ]
 $reg2_seg5 setSlope Free
-$reg2_seg5 setSlopeOut 1 {-0.040698374979289076 -0.053676991640367988 0}
-$reg2_seg5  setSlopeIn 2 {0.023247689036467234 0.082002476421941722 0}
+$reg2_seg5 setSlopeOut 1 {-0.036041559135595369 -0.036941462174617253 0}
+$reg2_seg5 setSlopeIn 2 {0.080755618092521964 0.23398254429198423 0}
 set reg2_con5 [pw::Connector create]
 $reg2_con5 addSegment $reg2_seg5
 
@@ -640,6 +640,9 @@ set ts5v [$ts5 getValue [lindex $reg2_con5sp 1] 1]
 
 $conwups addPoint [[[lindex $conu_tail 2] getNode Begin] getXYZ]
 $conwups addPoint [[$wu getNode End] getXYZ]
+$conwups setSlope Free
+$conwups setSlopeOut 1 {0.0070737862287199027 -0.073714839558578521 0}
+$conwups setSlopeIn 2 {0.021087198341749103 0.038234843591719435 0}
 set conwup [pw::Connector create]
 $conwup addSegment $conwups
 $conwup setDimension [expr int ([$reg2_con2 getDimension]+[$ste getDimension]+[$reg1_con1 getDimension]-2)]

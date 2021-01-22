@@ -593,7 +593,7 @@ $conl_con addSegment $conl_seg
 set con_conj [pw::Connector join [list $con_con $conl_con $conu_con]]
 $con_conj removeAllBreakPoints
 
-set con_consp [$con_conj split [list 0.45 0.57]]
+set con_consp [$con_conj split [list [$con_conj getParameter -arc 0.49834455] [$con_conj getParameter -arc 0.49875101]]]
 
 set con_alsp [$wl split -I [list [expr [$wl getDimension] - [$sl getDimension]+1]]]
 
