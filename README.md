@@ -3,7 +3,7 @@
 
 These scripts written to generate multi-block structured grid for the CRM high-lift 2D section. Grid specifications are in the same folder. In overall, seven grid refinement levels are defined based on the flow properties.
 
-###Scripts
+### Scripts
 topoprepare.glf:
 Divides the domain into different sections and prepare the configuration to generate the multi-block structured grid.
 
@@ -25,7 +25,7 @@ provides grid guideline or specification for the different grid levels.
 flow_propertise.txt:
 specifies the flow condition.
 
-###Parameters
+### Parameters
 
 These parameters in the mesher.glf can be used to customize the grid:
 
@@ -69,5 +69,5 @@ set r2c3gr 1.09
 set r3c1gr 1.09
 ```
 
-![result](https://github.com/pdpdhp/HelicalTwistedTube/blob/master/steps.png)
+![result](https://github.com/pdpdhp/multielementmesher/grid.png)
 
