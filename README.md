@@ -69,5 +69,5 @@ set r2c3gr 1.09
 set r3c1gr 1.09
 ```
 
-![result](https://github.com/pdpdhp/multielementmesher/grid.png)
+![result](https://github.com/pdpdhp/multielementmesher/blob/master/grid.png)
 
