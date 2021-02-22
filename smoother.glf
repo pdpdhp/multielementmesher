@@ -44,7 +44,7 @@ if {$smth == 1} {
 		[lindex $adjdoms $i] setEllipticSolverAttribute -edge [lindex $adjbcs $i] EdgeSpacingCalculation Adjacent
 	}
 
-	foreach elm [list $dom_blk3 $blk31] bc [list 2 1] {
+	foreach elm [list $dom_blk3] bc [list 2] {
 		$elm setEllipticSolverAttribute -edge $bc EdgeConstraint Fixed
 	}
 

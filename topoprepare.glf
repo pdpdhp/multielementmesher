@@ -183,7 +183,7 @@ $upsrf setEndSpacing $ler_sg
 set laySpcBegin $ler_sg
 set laySpcEnd $ler_sg
 
-set midSpc [expr 100*$chord_sg]
+set midSpc [expr 5*$chord_sg]
 set laySpcGR $srfgr
 
 for {set i 0} {$laySpcBegin <= $midSpc} {incr i} {
@@ -209,7 +209,7 @@ $lowsrf setEndSpacing [expr $ler_sg*5]
 set laySpcBegin $ler_sg
 set laySpcEnd [expr $ler_sg*5]
 
-set midSpc [expr 50*$chord_sg]
+set midSpc [expr 5*$chord_sg]
 set laySpcGR $srfgr
 
 for {set i 0} {$laySpcBegin <= $midSpc} {incr i} {
@@ -236,7 +236,7 @@ $upsrff setEndSpacing $ler_sg
 set laySpcBegin $ler_sg
 set laySpcEnd $ler_sg
 
-set midSpc [expr 100*$chord_sg]
+set midSpc [expr 5*$chord_sg]
 set laySpcGR $srfgr
 
 for {set i 0} {$laySpcBegin <= $midSpc} {incr i} {
@@ -396,7 +396,7 @@ $lowsrf0 setEndSpacing [expr $ter_sg/2]
 set laySpcBegin $ter_sg
 set laySpcEnd [expr $ter_sg/2]
 
-set midSpc [expr 100*$chord_sg]
+set midSpc [expr 5*$chord_sg]
 set laySpcGR $srfgrwl
 
 for {set i 0} {$laySpcBegin <= $midSpc} {incr i} {
@@ -472,7 +472,7 @@ $upsrff1 setEndSpacing $ler_sg
 set laySpcBegin $ler_sg
 set laySpcEnd $ler_sg
 
-set midSpc [expr 100*$chord_sg]
+set midSpc [expr 3*$chord_sg]
 set laySpcGR $srfgrfu
 
 for {set i 0} {$laySpcBegin <= $midSpc} {incr i} {
@@ -500,7 +500,7 @@ $lowsrff setEndSpacing $ler_sg
 set laySpcBegin $fupf
 set laySpcEnd $ler_sg
 
-set midSpc [expr 100*$chord_sg]
+set midSpc [expr 3*$chord_sg]
 set laySpcGR $srfgrfu
 
 for {set i 0} {$laySpcBegin <= $midSpc} {incr i} {
@@ -730,15 +730,15 @@ $reg1_seg4 setSlopeIn 3 {0.050731978220743108 0.068518000192601791 0}
 set reg1_con4 [pw::Connector create]
 $reg1_con4 addSegment $reg1_seg4
 
-set reg1_con1sp [$reg1_con4 split [list [$reg1_con4 getParameter -arc 0.35]]]
+$reg2_con4 delete
+
+set conlowspsp [[lindex $conlowsp 0] split [[lindex $conlowsp 0] getParameter -arc 0.18]]
 
 set reg1_seg5 [pw::SegmentSpline create]
-$reg1_seg5 addPoint [[$suedg getNode End] getXYZ]
-$reg1_seg5 addPoint [[[lindex $reg1_con1sp 1] getNode Begin] getXYZ]
+$reg1_seg5 addPoint [[$sle getNode Begin] getXYZ]
+$reg1_seg5 addPoint [[[lindex $conlowspsp 0] getNode End] getXYZ]
 $reg1_seg5 setSlope Free
-$reg1_seg5 setSlopeOut 1 {0.025178603732440859 -0.019318533208375205 0}
-$reg1_seg5 setSlopeIn 2 {-0.041016255920888894 0.010933025102654731 0}
+$reg1_seg5 setSlopeOut 1 {0.0013509262461380584 -0.024687772260316904 0}
+$reg1_seg5 setSlopeIn 2 {0.060616261624016676 0.05116052901909951 0}
 set reg1_con5 [pw::Connector create]
 $reg1_con5 addSegment $reg1_seg5
-
-$reg2_con4 delete
