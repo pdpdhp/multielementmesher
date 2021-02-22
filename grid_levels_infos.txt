@@ -1,5 +1,27 @@
-General info for different grid levels generated:
+General info for generated grid levels:
 ================================================
 
 level 6:
+------------
+total domains: 40
+total cells: 279724 cells
 
+level 5:
+------------
+total domains: 40
+total cells: 316004 cells
+
+level 4:
+------------
+
+level 3:
+------------
+
+level 2:
+------------
+
+level 1:
+------------
+
+level 0:
+------------

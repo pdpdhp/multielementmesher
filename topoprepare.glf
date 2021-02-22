@@ -1,3 +1,19 @@
+# =============================================================
+# This script is written to generate structured multi-block
+# grids with different refinement levels over the CRM high-lift 
+# 2D section according to grid guideline specifications.
+#==============================================================
+#
+# written by Pay Dehpanah
+# Feb 2020 
+# 
+#==============================================================
+#
+# called by ---> mesher.glf
+#
+#==============================================================
+
+
 package require PWI_Glyph 3.18.3
 
 pw::Application reset
@@ -17,6 +33,8 @@ set ncells []
 set doms []
 set adjdoms []
 set adjbcs []
+set fixdoms []
+set fixbcs []
 
 if {$airfoil==1} {
 	puts "2-D CRM-HL wing section: fully structured multi-block grid generator!"
@@ -248,7 +266,7 @@ set laySpcBegin1 $ler_sg
 set laySpcEnd1 $ler_sg
 
 set laySpcBegin2 $ler_sg
-set laySpcEnd2 $ter_sg
+set laySpcEnd2 [expr $ler_sg/5]
 
 set midSpc [expr 3*$chord_sg]
 set laySpcGR $srfgr
@@ -291,16 +309,18 @@ $su setDistribution 2 $sltsrfu2
 $su setSubConnectorDimensionFromDistribution 2
 
 $sltsrfu2 setBeginSpacing $ler_sg
-$sltsrfu2 setEndSpacing $ter_sg
+$sltsrfu2 setEndSpacing [expr $ler_sg/5]
 
 $su setDimensionFromDistribution
+
+set susp [$su split [list [$su getParameter -arc 0.992]]]
 
 #slat low
 set sltsrf [pw::DistributionGrowth create]
 $sltsrf setBeginSpacing $ler_sg
-$sltsrf setEndSpacing $ter_sg
+$sltsrf setEndSpacing [expr $ler_sg/5]
 set laySpcBegin $ler_sg
-set laySpcEnd $ter_sg
+set laySpcEnd [expr $ler_sg/5]
 
 set midSpc [expr 3*$chord_sg]
 set laySpcGR $srfgr
@@ -340,6 +360,11 @@ $cov_dis setBeginSpacing $ler_sg
 $cov_dis setEndSpacing [expr $ler_sg*5]
 $wc setDistribution 1 $cov_dis
 
+set wcendSpc [pw::Examine create ConnectorEdgeLength]
+$wcendSpc addEntity $wc
+$wcendSpc examine
+set wcfv [$wcendSpc getValue $wc [expr [$wc getDimension]-1]]
+
 set upf_dis [pw::DistributionGeneral create [list $fu 1]]
 $upf_dis setBeginSpacing $ler_sg
 $upf_dis setEndSpacing $ler_sg
@@ -348,6 +373,11 @@ $fu setDistribution 1 $upf_dis
 $fte setDimension $tpts2_sg
 
 $ste setDimension $tpts1_sg
+
+set slatlow_sp [$sl split -I [list [expr [$sl getDimension]-[[lindex $susp 1] getDimension]+1]]]
+
+set sl [lindex $slatlow_sp 0]
+set sl_edge [lindex $slatlow_sp 1]
 
 #matching
 set con_alsp [$wl split [$wl getParameter -closest {0.08 0.0 0.0}]]
@@ -362,9 +392,9 @@ $reg2_b3c setVariable [[[lindex $con_alsp 0] getDistribution 1] getVariable]
 
 set lowsrf0 [pw::DistributionGrowth create]
 $lowsrf0 setBeginSpacing $ter_sg
-$lowsrf0 setEndSpacing $ler_sg
-set laySpcBegin $ler_sg
-set laySpcEnd [expr $ler_sg*5]
+$lowsrf0 setEndSpacing [expr $ter_sg/2]
+set laySpcBegin $ter_sg
+set laySpcEnd [expr $ter_sg/2]
 
 set midSpc [expr 100*$chord_sg]
 set laySpcGR $srfgrwl
@@ -386,14 +416,6 @@ $lowsrf0 setEndRate $laySpcGR
 [lindex $con_alsp 1] setDistribution 1 $lowsrf0
 [lindex $con_alsp 1] setSubConnectorDimensionFromDistribution 1
 
-set reg2_b3c2 [pw::DistributionGeneral create [list $sl]]
-$reg2_b3c2 setBeginSpacing 0
-$reg2_b3c2 setEndSpacing 0
-$reg2_b3c2 setVariable [[[lindex $con_alsp 1] getDistribution 1] getVariable]
-[lindex $con_alsp 1] setDistribution -lockEnds 1 $reg2_b3c2
-[[lindex $con_alsp 1] getDistribution 1] setBeginSpacing $ter_sg
-[[lindex $con_alsp 1] getDistribution 1] setEndSpacing [expr $ler_sg*5]
-
 #airfoil BL extrusion
 set a_edge [pw::Edge createFromConnectors [list $wu [lindex $con_alsp 0] [lindex $con_alsp 1] $wc $wte]]
 set a_dom [pw::DomainStructured create]
@@ -411,10 +433,8 @@ $a_dom setExtrusionSolverAttribute NormalVolumeSmoothing $vol_sg
 $a_extrusion run $stp_sg
 $a_extrusion end
 
-set susp [$su split [list [$su getParameter -arc 0.75]]]
-
 #slat BL extrusion
-set s_edge [pw::Edge createFromConnectors [list [lindex $susp 0] [lindex $susp 1] $sl $ste]]
+set s_edge [pw::Edge createFromConnectors [list $ste $sl $sl_edge [lindex $susp 0] [lindex $susp 1]]]
 set s_dom [pw::DomainStructured create]
 $s_dom addEdge $s_edge
 set s_extrusion [pw::Application begin ExtrusionSolver [list $s_dom]]
@@ -436,9 +456,14 @@ set con_flapsp [$fu split [$fu getParameter -closest [$wexcon getXYZ -arc 1]]]
 [lindex $con_flapsp 1] setDimension [$wc getDimension]
 set fuseg1 [pw::DistributionGeneral create [list $wc]]
 $fuseg1 setBeginSpacing $ler_sg
-$fuseg1 setEndSpacing [[lindex $con_flapsp 1] getAverageSpacing]
+$fuseg1 setEndSpacing $wcfv
 $fuseg1 setVariable [[[lindex $con_flapsp 1] getDistribution 1] getVariable]
 [lindex $con_flapsp 1] setDistribution -lockEnds 1 $fuseg1
+
+set fupexamine [pw::Examine create ConnectorEdgeLength]
+$fupexamine addEntity [lindex $con_flapsp 1]
+$fupexamine examine
+set fupf [$fupexamine getValue [lindex $con_flapsp 1] [expr [[lindex $con_flapsp 1] getDimension]-1]]
 
 #flap
 set upsrff1 [pw::DistributionGrowth create]
@@ -470,10 +495,10 @@ $upsrff1 setEndRate $laySpcGR
 set fusp [[lindex $con_flapsp 0] split [list [[lindex $con_flapsp 0] getParameter -arc 0.0032]]]
 
 set lowsrff [pw::DistributionGrowth create]
-$lowsrff setBeginSpacing [[lindex $con_flapsp 1] getAverageSpacing]
+$lowsrff setBeginSpacing $fupf
 $lowsrff setEndSpacing $ler_sg
-set laySpcBegin [[lindex $con_flapsp 1] getAverageSpacing]
-set laySpcEnd $ter_sg
+set laySpcBegin $fupf
+set laySpcEnd $ler_sg
 
 set midSpc [expr 100*$chord_sg]
 set laySpcGR $srfgrfu
@@ -523,12 +548,16 @@ set wu [lindex $wconsp 2]
 set wte [lindex $wconsp 3]
 
 set scon [[$s_dom getEdge 3] getConnector 1]
-set sconsp [$scon split -I [list [[lindex $susp 1] getDimension] [expr [[lindex $susp 1] getDimension] + [[lindex $susp 0] getDimension]-1]\
-			[expr [[lindex $susp 1] getDimension] + [[lindex $susp 0] getDimension] + $tpts1_sg -2]]]
-set ste [lindex $sconsp 2]
-set sl [lindex $sconsp 3]
-set su [lindex $sconsp 1]
-set sle [lindex $sconsp 0]
+set sconsp [$scon split -I [list [$sl getDimension] [expr [$sl getDimension] + [$sl_edge getDimension]-1]\
+			 [expr [$sl getDimension] + [$sl_edge getDimension] + [[lindex $susp 1] getDimension] -2]\
+				 [expr [$sl getDimension] + [$sl_edge getDimension] + [[lindex $susp 1] getDimension] + [[lindex $susp 0] getSubConnectorDimension 2] -3]\
+				 [expr [$sl getDimension] + [$sl_edge getDimension] + [[lindex $susp 1] getDimension] + [[lindex $susp 0] getDimension] -3]]]
+set sl [lindex $sconsp 0]
+set sledg [lindex $sconsp 1]
+set suedg [lindex $sconsp 2]
+set sle [lindex $sconsp 3]
+set su [lindex $sconsp 4]
+set ste [lindex $sconsp 5]
 
 set fcon [[$f_dom getEdge 3] getConnector 1]
 set fconsp [$fcon split -I [list [expr [$fcon getDimension]-$tpts2_sg+1]\
@@ -543,6 +572,8 @@ set ptC {500.77940487 -5.63194054 0}
 set ptD {500.77940487 -50.63194054 0}
 
 set ptAs [[[lindex $sconsp 0] getNode Begin] getXYZ]
+set ptAAs [[$sl getNode End] getXYZ]
+set ptAAAs [[$sledg getNode End] getXYZ]
 set ptBs {0.728742627189183 -0.22 0}
 set ptDs {500.77940487 -40.25092185 0}
 
@@ -603,7 +634,7 @@ $con_conj removeAllBreakPoints
 
 set con_consp [$con_conj split [list [$con_conj getParameter -arc 0.49847561] [$con_conj getParameter -arc 0.49866256]]]
 
-set con_alsp [$wl split -I [list [expr [$wl getDimension] - [$sl getDimension]+1]]]
+set con_alsp [$wl split -I [list [expr [$wl getDimension] - [$sl getDimension] +1]]]
 
 set con_flapsp [$fu split -I [list [$wc getDimension] ]]
 
@@ -623,8 +654,8 @@ set reg1_seg1 [pw::SegmentSpline create]
 $reg1_seg1 addPoint $ptAsu
 $reg1_seg1 addPoint [[[lindex $con_consp 1] getNode Begin] getXYZ]
 $reg1_seg1 setSlope Free
-$reg1_seg1 setSlopeOut 1 {0.00028003821120525102 0.02684384864778316 0}
-$reg1_seg1 setSlopeIn 2 {0.037098073008139776 -0.016074381487379531 0}
+$reg1_seg1 setSlopeOut 1 {0.00028003821120518857 0.026843848647783202 0}
+$reg1_seg1 setSlopeIn 2 {0.013191584685044888 -0.022679380051977963 0}
 set reg1_con1 [pw::Connector create]
 $reg1_con1 addSegment $reg1_seg1
 
@@ -632,8 +663,8 @@ set reg1_seg3 [pw::SegmentSpline create]
 $reg1_seg3 addPoint [[$su getNode Begin] getXYZ]
 $reg1_seg3 addPoint [[[lindex $con_consp 2] getNode Begin] getXYZ]
 $reg1_seg3 setSlope Free
-$reg1_seg3 setSlopeOut 1 {-0.030579007654961118 -0.020151477573753768 0}
-$reg1_seg3 setSlopeIn 2 {0.070819637087692067 0.025425207590922511 0}
+$reg1_seg3 setSlopeOut 1 {-0.025995484382943079 -0.024638410649165776 0}
+$reg1_seg3 setSlopeIn 2 {0.054057496843488484 0.037097650635995488 0}
 set reg1_con3 [pw::Connector create]
 $reg1_con3 addSegment $reg1_seg3
 
@@ -648,7 +679,7 @@ $reg2_con2 addSegment $reg2_seg2
 
 set reg2_seg3 [pw::SegmentSpline create]
 $reg2_seg3 addPoint [[[lindex $con_alsp 0] getNode End] getXYZ]
-$reg2_seg3 addPoint $ptAs
+$reg2_seg3 addPoint $ptAAs
 $reg2_seg3 setSlope Free
 $reg2_seg3 setSlopeOut 1 {-0.0082443748496585922 -0.036104390867539346 0}
 $reg2_seg3 setSlopeIn 2 {0.021024602933046796 0.032170920390927164 0}
@@ -674,7 +705,7 @@ set reg3_con2 [pw::Connector create]
 $reg3_con2 addSegment $reg3_seg2
 
 set reg2_seg4 [pw::SegmentSpline create]
-$reg2_seg4 addPoint $ptAs
+$reg2_seg4 addPoint $ptAAAs
 $reg2_seg4 addPoint {0.182078184753842 -0.154042771909779 0}
 $reg2_seg4 setSlope Free
 $reg2_seg4 setSlopeOut 1 {0.040572631328093578 0.00050582301756901815 0}
@@ -684,10 +715,11 @@ $reg2_con4 addSegment $reg2_seg4
 
 set conlowsp [[lindex $con_consp 2] split [list [[lindex $con_consp 2] getParameter -closest [[$reg2_con4 getNode End] getXYZ]]]]
 
-set conupsp [[lindex $con_alsp 0] split -I [list [lindex [[lindex $con_alsp 0] closestCoordinate [$reg2_con4 getPosition -arc 1]] 0] ]]
+set conupsp [[lindex $con_alsp 0] split -I [list [lindex [[lindex $con_alsp 0] closestCoordinate [$reg2_con4 getPosition -arc 1]] 0]\
+					 [lindex [[lindex $con_alsp 0] closestCoordinate [[lindex $con_alsp 0] getPosition -arc 0.006]] 0]]]
 
 set reg1_seg4 [pw::SegmentSpline create]
-$reg1_seg4 addPoint [[[lindex $conupsp 1] getNode Begin] getXYZ]
+$reg1_seg4 addPoint [[[lindex $conupsp 1] getNode End] getXYZ]
 $reg1_seg4 addPoint [[$reg2_con4 getNode End] getXYZ]
 $reg1_seg4 addPoint [[[lindex $conlowsp 0] getNode End] getXYZ]
 $reg1_seg4 setSlope Free
@@ -698,4 +730,15 @@ $reg1_seg4 setSlopeIn 3 {0.050731978220743108 0.068518000192601791 0}
 set reg1_con4 [pw::Connector create]
 $reg1_con4 addSegment $reg1_seg4
 
-set reg1_con1sp [$reg1_con4 split [$reg1_con4 getParameter -closest [[$reg2_con4 getNode End] getXYZ]]]
+set reg1_con1sp [$reg1_con4 split [list [$reg1_con4 getParameter -arc 0.35]]]
+
+set reg1_seg5 [pw::SegmentSpline create]
+$reg1_seg5 addPoint [[$suedg getNode End] getXYZ]
+$reg1_seg5 addPoint [[[lindex $reg1_con1sp 1] getNode Begin] getXYZ]
+$reg1_seg5 setSlope Free
+$reg1_seg5 setSlopeOut 1 {0.025178603732440859 -0.019318533208375205 0}
+$reg1_seg5 setSlopeIn 2 {-0.041016255920888894 0.010933025102654731 0}
+set reg1_con5 [pw::Connector create]
+$reg1_con5 addSegment $reg1_seg5
+
+$reg2_con4 delete

@@ -1,3 +1,18 @@
+# =============================================================
+# This script is written to generate structured multi-block
+# grids with different refinement levels over the CRM high-lift 
+# 2D section according to grid guideline specifications.
+#==============================================================
+#
+# written by Pay Dehpanah
+# Feb 2020 
+# 
+#==============================================================
+#
+# called by ---> mesher.glf
+#
+#==============================================================
+
 
 package require PWI_Glyph 3.18.3
 
@@ -18,13 +33,13 @@ $blkxtr setExtrusionBoundaryConditionStepSuppression Begin 0
 $blkxtr setExtrusionBoundaryCondition End Splay 0.015
 $blkxtr setExtrusionBoundaryConditionStepSuppression End 0
 $blkxtr setExtrusionSolverAttribute NormalInitialStepSize $texrv
-$blkxtr setExtrusionSolverAttribute SpacingGrowthFactor 1.05
+$blkxtr setExtrusionSolverAttribute SpacingGrowthFactor 1.15
 $blkxtr setExtrusionSolverAttribute NormalMaximumStepSize 0.0
 $blkxtr setExtrusionSolverAttribute StopAtHeight 22
-$blkxtr setExtrusionSolverAttribute NormalExplicitSmoothing 0.09
-$blkxtr setExtrusionSolverAttribute NormalImplicitSmoothing 20.0
+$blkxtr setExtrusionSolverAttribute NormalExplicitSmoothing 0.1
+$blkxtr setExtrusionSolverAttribute NormalImplicitSmoothing 0.2
 $blkxtr setExtrusionSolverAttribute NormalKinseyBarthSmoothing 0.0
-$blkxtr setExtrusionSolverAttribute NormalVolumeSmoothing 0.01
+$blkxtr setExtrusionSolverAttribute NormalVolumeSmoothing 0.0001
 $sxtr run $xtr1
 $sxtr end
 
@@ -62,13 +77,13 @@ $blkxtr2 setExtrusionBoundaryConditionStepSuppression Begin 0
 $blkxtr2 setExtrusionBoundaryCondition End Splay 0.015
 $blkxtr2 setExtrusionBoundaryConditionStepSuppression End 0
 $blkxtr2 setExtrusionSolverAttribute NormalInitialStepSize $stepxtrv
-$blkxtr2 setExtrusionSolverAttribute SpacingGrowthFactor 1.12
+$blkxtr2 setExtrusionSolverAttribute SpacingGrowthFactor 1.15
 $blkxtr2 setExtrusionSolverAttribute NormalMaximumStepSize 50.0
 $blkxtr2 setExtrusionSolverAttribute StopAtHeight 440
-$blkxtr2 setExtrusionSolverAttribute NormalExplicitSmoothing 0.1
-$blkxtr2 setExtrusionSolverAttribute NormalImplicitSmoothing 0.2
-$blkxtr2 setExtrusionSolverAttribute NormalKinseyBarthSmoothing 1.5
-$blkxtr2 setExtrusionSolverAttribute NormalVolumeSmoothing 0.13
+$blkxtr2 setExtrusionSolverAttribute NormalExplicitSmoothing 0.9
+$blkxtr2 setExtrusionSolverAttribute NormalImplicitSmoothing 1.8
+$blkxtr2 setExtrusionSolverAttribute NormalKinseyBarthSmoothing 0.0
+$blkxtr2 setExtrusionSolverAttribute NormalVolumeSmoothing 0.18
 $sxtr2 run $xtr2
 $sxtr2 end
 
@@ -171,29 +186,8 @@ $domexm addEntity [lindex $blk12sp 1]
 lappend adjdoms [lindex $blk12sp 0]
 lappend adjbcs 1
 
-set blk32sp [$blk32 split -J [list $I4]]
+#=====================================================SMOOTHER====================================
 
-$domexm addEntity [lindex $blk32sp 0]
-	lappend ncells [[lindex $blk32sp 0] getCellCount]
-	lappend doms [lindex $blk32sp 0]
-$domexm addEntity [lindex $blk32sp 1]
-	lappend ncells [[lindex $blk32sp 1] getCellCount]
-	lappend doms [lindex $blk32sp 1]
-lappend adjdoms [lindex $blk32sp 0]
-lappend adjdoms [lindex $blk32sp 0]
-lappend adjbcs 1
-lappend adjbcs 3
+#source [file join $scriptDir "smoother.glf"]
 
-lappend adjdoms [lindex $blk32sp 1]
-lappend adjdoms [lindex $blk32sp 1]
-lappend adjdoms [lindex $blk32sp 1]
-lappend adjbcs 1
-lappend adjbcs 3
-lappend adjbcs 4
-
-#=====================================================OUTTER DOMAIN SMOOTHER====================================
-
-if {$smth == 1} {
-	source [file join $scriptDir "smoother.glf"]
-}
 

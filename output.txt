@@ -1,4 +1,4 @@
-total domains: 40
-total cells: 279724 cells
-min vol: 2.983567e-12
-runtime: 989 373492 sec
+total domains: 43
+total cells: 256248 cells
+min vol: 2.799545e-11
+runtime: 23 6060 sec
