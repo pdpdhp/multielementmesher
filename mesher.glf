@@ -20,19 +20,23 @@ set airfoil 1
 
 #Grid Levels: varies from the first line of the grid_specification.txt to the last line as the coarsest level!
 #Default values from 6 to 0!
-set res_lev 0
+set res_lev 5
 
 # running structured solver over domains surrounding the config!
-# values: 1 or 0 for on and off! Runs only if smth is switched off!
-set slv_switch 0
+# 1 or 0 for on and off! Runs only if smth is switched off!
+set local_smth 0
+
+# number of iterations to run the local elliptic solver over domains! 
+# >1000 Recommended, Default: 3000
+set lsmthiter 3000
 
 # running elliptic solver over domains surrounding the config!
-# values: 1 or 0 for on and off!
-set smth 1
+# 1 or 0 for on and off!
+set global_smth 1
 
-# running elliptic solver over outer c-type domain!
-# values: 1 or 0 for on and off! only if smoothing switch above is on, it can be considered!
-set smth_b 0
+# number of iterations to run the global elliptic solver over domains! 
+# >1000 Recommended, Default: 2000
+set gsmthiter 2000
 
 #General chrdwise growth ratio for node distribution over the wing, flap, and slat!
 set srfgr 1.15
@@ -297,7 +301,7 @@ $reg1_con1 setSubConnectorDimensionFromDistribution 1
 set texr [pw::Examine create ConnectorEdgeLength]
 $texr addEntity $reg1_con1
 $texr examine
-set texrv [$texr getMaximum]
+set texrv [$texr getValue $reg1_con1 [expr [$reg1_con1 getDimension]-1]]
 
 $reg1_con3 setDimension [$reg1_con1 getDimension]
 $reg1_con3 setDistribution 1 [[$reg1_con1 getDistribution 1] copy]
@@ -317,8 +321,6 @@ set reg1c3sv [$reg1c3s getMaximum]
 
 # 1. DOM OVER SLAT
 set r1_blk2 [pw::DomainStructured createFromConnectors [list [lindex $con_consp 1] $reg1_con1 $su $reg1_con3]]
-$domexm addEntity [list $r1_blk2]
-lappend ncells [$r1_blk2 getCellCount]
 lappend doms $r1_blk2
 lappend adjdoms $r1_blk2
 lappend adjdoms $r1_blk2
@@ -396,9 +398,9 @@ $domexm addEntity $dom_blk3
 lappend ncells [$dom_blk3 getCellCount]
 lappend doms $dom_blk3
 lappend adjdoms $dom_blk3
-#lappend adjdoms $dom_blk3
+lappend fixdoms $dom_blk3
 lappend adjbcs 4
-#lappend adjbcs 2
+lappend fixbcs 2
 
 #=====================================================REGION 3===================================
 
@@ -553,8 +555,6 @@ lappend ncells [[lindex $a_domsp 5] getCellCount]
 
 # 3. BTW FLAP AND WING
 set r3_blk3 [pw::DomainStructured createFromConnectors [list [lindex $con_flapsp 0] $wc $reg3_con2 $reg3_con3 [lindex $reg2_con5sp 0]]]
-$domexm addEntity $r3_blk3
-lappend ncells [$r3_blk3 getCellCount]
 lappend doms $r3_blk3
 lappend adjdoms $r3_blk3
 lappend adjdoms $r3_blk3
@@ -608,8 +608,6 @@ $reg2_con7 setDistribution -lockEnds 1 $r2c7seg
 
 # 4. BELOW FLAP
 set r3_blk4 [pw::DomainStructured createFromConnectors [list [lindex $reg2_con5sp 0] [lindex $con_flsp 1] [lindex $reg2_con6sp 0] $reg2_con7]]
-$domexm addEntity $r3_blk4
-lappend ncells [$r3_blk4 getCellCount]
 lappend doms $r3_blk4
 lappend adjdoms $r3_blk4
 lappend adjdoms $r3_blk4
@@ -730,7 +728,7 @@ set tt0v [$tt0 getValue [lindex $conu_tail 1] 1]
 set tt1 [pw::DistributionGrowth create]
 $tt1 setBeginSpacing $tt0v
 set laySpcBegin $tt0v
-set midSpc [expr [$tt0 getMaximum]*1000]
+set midSpc [expr [$tt0 getMaximum]*2000]
 set laySpcGR 1.05
 
 for {set i 0} {$laySpcBegin <= $midSpc} {incr i} {
@@ -797,7 +795,8 @@ set midseg2 [pw::DistributionGeneral create [list $reg1_con3]]
 $midseg2 setBeginSpacing 0
 $midseg2 setEndSpacing 0
 $midseg2 setVariable [[$reg1_con5 getDistribution 1] getVariable]
-$reg1_con5 setDistribution -lockEnds 1 $midseg2
+$reg1_con5 setDistribution 1 $midseg2
+[$reg1_con5 getDistribution 1] setEndSpacing $texrv
 
 [lindex $conlowspsp 0] setDimension [$sle getDimension]
 set mid2seg [pw::DistributionGeneral create [list $sle]]
@@ -897,6 +896,7 @@ set midSpcVal [$midScpexm getValue $reg1_con4 [$reg2_con3 getDimension]]
 
 [$reg1_con4 getDistribution 1] setEndSpacing $midSpcVal
 [$reg1_con4 getDistribution 3] setBeginSpacing $midSpcVal
+[$reg1_con4 getDistribution 3] setEndSpacing $texrv
 
 set segmidcon [pw::SegmentSpline create]
 $segmidcon addPoint [[[lindex $conupsp 0] getNode End] getXYZ]
@@ -907,26 +907,102 @@ $segmidcon setSlopeIn 2 {0.036577854988315117 0.12727483004428952 0}
 set reg2_con8 [pw::Connector create]
 $reg2_con8 addSegment $segmidcon
 
+set r1con4dims [$reg1_con4 getSubConnectorDimension]
 $reg2_con8 setDimension [$reg1_con4 getDimension]
-set reg28dis [pw::DistributionGeneral create [list [list $reg1_con4 1] [list $reg1_con4 2] [list $reg1_con4 3]]]
-$reg28dis setBeginSpacing 0
-$reg28dis setEndSpacing 0
-$reg28dis setVariable [[$reg2_con8 getDistribution 1] getVariable]
-$reg2_con8 setDistribution -lockEnds 1 $reg28dis
 
-set mid1seg [pw::DistributionGeneral create [list $reg2_con8]]
-$mid1seg setBeginSpacing 0
-$mid1seg setEndSpacing 0
-$mid1seg setVariable [[[lindex $reg2_con5sp 1] getDistribution 1] getVariable]
-[lindex $reg2_con5sp 1] setDistribution -lockEnds 1 $mid1seg
+$reg2_con8 addBreakPoint -arc [expr [$reg1_con4 getLength -grid [lindex $r1con4dims 0]]/[$reg1_con4 getLength -arc 1]]
+$reg2_con8 addBreakPoint -arc [expr [$reg1_con4 getLength -grid [expr [lindex $r1con4dims 1]+[lindex $r1con4dims 0]]]/[$reg1_con4 getLength -arc 1]]
+
+$reg2_con8 setSubConnectorDimension $r1con4dims
+
+set reg28dis1 [pw::DistributionGeneral create [list [list $reg1_con4 1]]]
+$reg28dis1 setBeginSpacing 0
+$reg28dis1 setEndSpacing 0
+$reg28dis1 setVariable [[$reg2_con8 getDistribution 1] getVariable]
+$reg2_con8 setDistribution 1 $reg28dis1
+
+set reg28dis2 [pw::DistributionGeneral create [list [list $reg1_con4 2]]]
+$reg28dis2 setBeginSpacing 0
+$reg28dis2 setEndSpacing 0
+$reg28dis2 setVariable [[$reg2_con8 getDistribution 2] getVariable]
+$reg2_con8 setDistribution 2 $reg28dis2
+
+set reg28dis3 [pw::DistributionGeneral create [list [list $reg1_con4 3]]]
+$reg28dis3 setBeginSpacing 0
+$reg28dis3 setEndSpacing 0
+$reg28dis3 setVariable [[$reg2_con8 getDistribution 3] getVariable]
+$reg2_con8 setDistribution 3 $reg28dis3
+[$reg2_con8 getDistribution 3] setEndSpacing $texrv
+
+set r2c2spc1 [pw::Examine create ConnectorEdgeLength]
+$r2c2spc1 addEntity $reg2_con8
+$r2c2spc1 examine
+set r2c2spcv1 [$r2c2spc1 getValue $reg2_con8 1]
+
+set r2c2spc2 [pw::Examine create ConnectorEdgeLength]
+$r2c2spc2 addEntity $reg2_con8
+$r2c2spc2 examine
+set r2c2spcv2 [$r2c2spc2 getValue $reg2_con8 [expr [lindex $r1con4dims 0]+1]]
+
+[lindex $reg2_con5sp 1] addBreakPoint -arc [expr [$reg1_con4 getLength -grid [lindex $r1con4dims 0]]/[$reg1_con4 getLength -arc 1]]
+[lindex $reg2_con5sp 1] addBreakPoint -arc [expr [$reg1_con4 getLength -grid [expr [lindex $r1con4dims 1]+[lindex $r1con4dims 0]]]/[$reg1_con4 getLength -arc 1]]
+
+[lindex $reg2_con5sp 1] setSubConnectorDimension [list [expr [lindex $r1con4dims 0]+[[lindex $conupsp 0] getDimension]-1] [lindex $r1con4dims 1] [lindex $r1con4dims 2]]
+
+set mid1seg1 [pw::DistributionGeneral create [list [list $reg2_con8 1] [list [lindex $conupsp 0] 1]]]
+$mid1seg1 setBeginSpacing 0
+$mid1seg1 setEndSpacing 0
+$mid1seg1 setVariable [[[lindex $reg2_con5sp 1] getDistribution 1] getVariable]
+[lindex $reg2_con5sp 1] setDistribution 1 $mid1seg1
+[[lindex $reg2_con5sp 1] getDistribution 1] reverse
+
+set mid1seg2 [pw::DistributionGeneral create [list [list $reg2_con8 2]]]
+$mid1seg2 setBeginSpacing 0
+$mid1seg2 setEndSpacing 0
+$mid1seg2 setVariable [[[lindex $reg2_con5sp 1] getDistribution 2] getVariable]
+[lindex $reg2_con5sp 1] setDistribution 2 $mid1seg2
+[[lindex $reg2_con5sp 1] getDistribution 2] reverse
+
+set mid1seg3 [pw::DistributionGeneral create [list [list $reg2_con8 3]]]
+$mid1seg3 setBeginSpacing 0
+$mid1seg3 setEndSpacing 0
+$mid1seg3 setVariable [[[lindex $reg2_con5sp 1] getDistribution 3] getVariable]
+[lindex $reg2_con5sp 1] setDistribution 3 $mid1seg3
+
 [[lindex $reg2_con5sp 1] getDistribution 1] setBeginSpacing $r3v3s
+[[lindex $reg2_con5sp 1] getDistribution 1] setEndSpacing $r2c2spcv2
+[[lindex $reg2_con5sp 1] getDistribution 3] setBeginSpacing $r2c2spcv2
+[[lindex $reg2_con5sp 1] getDistribution 3] setEndSpacing $texrv
 
-set r2c6seg1 [pw::DistributionGeneral create [list [lindex $reg2_con5sp 1]]]
+[lindex $reg2_con6sp 1] addBreakPoint -arc [expr [[lindex $reg2_con5sp 1] getLength -grid [expr [lindex $r1con4dims 0]+\
+											[[lindex $conupsp 0] getDimension]-1]]/[[lindex $reg2_con5sp 1] getLength -arc 1]]
+[lindex $reg2_con6sp 1] addBreakPoint -arc [expr [[lindex $reg2_con5sp 1] getLength -grid [expr [lindex $r1con4dims 1]+\
+									[lindex $r1con4dims 0]+[[lindex $conupsp 0] getDimension]]]/[[lindex $reg2_con5sp 1] getLength -arc 1]]
+
+[lindex $reg2_con6sp 1] setSubConnectorDimension [list [expr [lindex $r1con4dims 0]+[[lindex $conupsp 0] getDimension]-1] [lindex $r1con4dims 1] [lindex $r1con4dims 2]]
+
+set r2c6seg1 [pw::DistributionGeneral create [list [lindex $reg2_con5sp 1] 1]]
 $r2c6seg1 setBeginSpacing 0
 $r2c6seg1 setEndSpacing 0
 $r2c6seg1 setVariable [[[lindex $reg2_con6sp 1] getDistribution 1] getVariable]
-[lindex $reg2_con6sp 1] setDistribution -lockEnds 1 $r2c6seg1
+[lindex $reg2_con6sp 1] setDistribution 1 $r2c6seg1
+
+set r2c6seg2 [pw::DistributionGeneral create [list [lindex $reg2_con5sp 1] 2]]
+$r2c6seg2 setBeginSpacing 0
+$r2c6seg2 setEndSpacing 0
+$r2c6seg2 setVariable [[[lindex $reg2_con6sp 1] getDistribution 2] getVariable]
+[lindex $reg2_con6sp 1] setDistribution 2 $r2c6seg2
+
+set r2c6seg3 [pw::DistributionGeneral create [list [lindex $reg2_con5sp 1] 3]]
+$r2c6seg3 setBeginSpacing 0
+$r2c6seg3 setEndSpacing 0
+$r2c6seg3 setVariable [[[lindex $reg2_con6sp 1] getDistribution 3] getVariable]
+[lindex $reg2_con6sp 1] setDistribution 3 $r2c6seg3
+
 [[lindex $reg2_con6sp 1] getDistribution 1] setBeginSpacing $r2c6sp0v
+[[lindex $reg2_con6sp 1] getDistribution 1] setEndSpacing $r2c2spcv2
+[[lindex $reg2_con6sp 1] getDistribution 3] setBeginSpacing $r2c2spcv2
+[[lindex $reg2_con6sp 1] getDistribution 3] setEndSpacing $texrv
 
 set slatdown [pw::Examine create ConnectorEdgeLength]
 $slatdown addEntity [lindex $conl_tail 0]
@@ -953,13 +1029,11 @@ set blk1 [pw::DomainStructured create]
 	$blk1 addEdge $edge13
 	$blk1 addEdge $edge14
 
-$domexm addEntity $blk1
-lappend ncells [$blk1 getCellCount]
 lappend doms $blk1
 lappend adjdoms $blk1
-lappend adjdoms $blk1
+lappend fixdoms $blk1
 lappend adjbcs 1
-lappend adjbcs 3
+lappend fixbcs 3
 
 # 6. WING TAIL
 set edge112 [pw::Edge create]
@@ -978,6 +1052,18 @@ set blk12 [pw::DomainStructured create]
 	$blk12 addEdge $edge132
 	$blk12 addEdge $edge142
 
+set blk12sp [$blk12 split -J [list [[lindex $conu_tail 1] getDimension]]]
+set blk12sp1con [[[lindex $blk12sp 0] getEdge 3] getConnector 1]
+[$blk12sp1con getDistribution 1] setEndSpacing $texrv
+[$blk12sp1con getDistribution 1] setBeginSpacing $r3v2s
+
+lappend doms [lindex $blk12sp 0]
+lappend doms [lindex $blk12sp 1]
+lappend adjdoms [lindex $blk12sp 0]
+lappend fixdoms [lindex $blk12sp 0]
+lappend adjbcs 4
+lappend fixbcs 1
+
 # 7. OVER FLAP
 set edge21 [pw::Edge create]
 	$edge21 addConnector [lindex $wigu_tail 0]
@@ -994,10 +1080,10 @@ set blk2 [pw::DomainStructured create]
 	$blk2 addEdge $edge23
 	$blk2 addEdge $edge24
 
-$domexm addEntity $blk2
-lappend ncells [$blk2 getCellCount]
 lappend doms $blk2
 lappend adjdoms $blk2
+lappend adjdoms $blk2
+lappend adjbcs 1
 lappend adjbcs 4
 
 # 7. FLAP TAIL
@@ -1015,9 +1101,9 @@ set blk22 [pw::DomainStructured create]
 	$blk22 addEdge $edge232
 	$blk22 addEdge $edge242
 
-$domexm addEntity $blk22
-lappend ncells [$blk22 getCellCount]
 lappend doms $blk22
+lappend adjdoms $blk22
+lappend adjbcs 3
 
 # 8. FLAP TE
 set edge41 [pw::Edge create]
@@ -1039,6 +1125,10 @@ set blk4 [pw::DomainStructured create]
 $domexm addEntity $blk4
 lappend ncells [$blk4 getCellCount]
 lappend doms $blk4
+lappend adjdoms $blk4
+lappend adjdoms $blk4
+lappend adjbcs 2
+lappend adjbcs 4
 
 # 9. SLAT LE DOWN
 set edge31 [pw::Edge create]
@@ -1055,8 +1145,6 @@ set blk3 [pw::DomainStructured create]
 	$blk3 addEdge $edge33
 	$blk3 addEdge $edge34
 
-$domexm addEntity $blk3
-lappend ncells [$blk3 getCellCount]
 lappend doms $blk3
 lappend adjdoms $blk3
 lappend adjdoms $blk3
@@ -1081,8 +1169,6 @@ set blk31 [pw::DomainStructured create]
 	$blk31 addEdge $edge313
 	$blk31 addEdge $edge314
 
-$domexm addEntity $blk31
-lappend ncells [$blk31 getCellCount]
 lappend doms $blk31
 lappend adjdoms $blk31
 lappend adjdoms $blk31
@@ -1104,8 +1190,6 @@ set blk321 [pw::DomainStructured create]
 	$blk321 addEdge $edge332
 	$blk321 addEdge $edge342
 
-$domexm addEntity $blk321
-lappend ncells [$blk321 getCellCount]
 lappend doms $blk321
 lappend adjdoms $blk321
 lappend adjdoms $blk321
@@ -1128,8 +1212,6 @@ set blk322 [pw::DomainStructured create]
 	$blk322 addEdge $edge333
 	$blk322 addEdge $edge343
 
-$domexm addEntity $blk322
-lappend ncells [$blk322 getCellCount]
 lappend doms $blk322
 lappend adjdoms $blk322
 lappend adjdoms $blk322
@@ -1153,8 +1235,6 @@ set blk33 [pw::DomainStructured create]
 	$blk33 addEdge $edge333
 	$blk33 addEdge $edge343
 
-$domexm addEntity $blk33
-lappend ncells [$blk33 getCellCount]
 lappend doms $blk33
 lappend adjdoms $blk33
 lappend adjdoms $blk33
@@ -1162,7 +1242,6 @@ lappend adjdoms $blk33
 lappend adjbcs 1
 lappend adjbcs 2
 lappend adjbcs 3
-
 
 # 11 FLAP TAIL DOWN
 set edge51 [pw::Edge create]
@@ -1180,15 +1259,15 @@ set blk5 [pw::DomainStructured create]
 	$blk5 addEdge $edge53
 	$blk5 addEdge $edge54
 
-$domexm addEntity $blk5
-lappend ncells [$blk5 getCellCount]
 lappend doms $blk5
 lappend adjdoms $blk5
+lappend adjdoms $blk5
 lappend adjbcs 4
+lappend adjbcs 1
 
 #=========================================================solve domains======================================
-# running structured solver over structured domains surrounding the configuration -- slv_switch turns it off!
-if {$slv_switch == 1 && $smth == 0} {
+# running structured solver over structured domains surrounding the configuration -- local_smth turns it off!
+if {$local_smth == 1 && $global_smth == 0} {
 	set dsolve [pw::Application begin EllipticSolver $doms]
 	set dom_dsolve []
 	set bc_dsolve []
@@ -1211,9 +1290,7 @@ if {$slv_switch == 1 && $smth == 0} {
 		$elm setEllipticSolverAttribute -edge $bc EdgeSpacingCalculation Adjacent
 	}
 	
-	$blk12 setEllipticSolverAttribute -edge 1 EdgeSpacingCalculation Adjacent
-	
-	foreach elm [list $dom_blk3] bc [list 2] {
+	foreach elm $fixdoms bc $fixbcs {
 		$elm setEllipticSolverAttribute -edge $bc EdgeConstraint Fixed
 	}
 	
@@ -1221,9 +1298,9 @@ if {$slv_switch == 1 && $smth == 0} {
 		$dsolve setActiveSubGrids $elm [list]
 	}
 	
-	$dsolve run 3000
+	$dsolve run $lsmthiter
 	$dsolve end
-	puts "Elliptic solver ran only over the first layer of structured domains! To run with second layer of structured layer switch on smth!"
+	puts "Local Elliptic Solver: finished $lsmthiter iterations over [llength $doms] structured domains!"
 }
 
 #=====================================================OUTTER DOMAIN EXTRUSION====================================

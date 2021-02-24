@@ -36,6 +36,14 @@ set adjbcs []
 set fixdoms []
 set fixbcs []
 
+#smoother Entities
+set floatd []
+set floatedg []
+set orthod []
+set orthoedg []
+set fixd []
+set fixedg []
+
 if {$airfoil==1} {
 	puts "2-D CRM-HL wing section: fully structured multi-block grid generator!"
 } elseif {$airfoil==2} {

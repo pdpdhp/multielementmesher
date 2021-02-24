@@ -3,8 +3,8 @@ General info for generated grid levels:
 
 level 6:
 ------------
-total domains: 40
-total cells: 279724 cells
+total domains: 26
+total cells: 299469 cells
 
 level 5:
 ------------
