@@ -740,13 +740,13 @@ $reg1_con4 addSegment $reg1_seg4
 
 $reg2_con4 delete
 
-set conlowspsp [[lindex $conlowsp 0] split [[lindex $conlowsp 0] getParameter -arc 0.18]]
+set conlowspsp [[lindex $conlowsp 0] split [[lindex $conlowsp 0] getParameter -arc 0.41]]
 
 set reg1_seg5 [pw::SegmentSpline create]
 $reg1_seg5 addPoint [[$sle getNode Begin] getXYZ]
 $reg1_seg5 addPoint [[[lindex $conlowspsp 0] getNode End] getXYZ]
 $reg1_seg5 setSlope Free
 $reg1_seg5 setSlopeOut 1 {0.0013509262461380584 -0.024687772260316904 0}
-$reg1_seg5 setSlopeIn 2 {0.060616261624016676 0.05116052901909951 0}
+$reg1_seg5 setSlopeIn 2 {0.054849943959117561 0.049915701087925424 0}
 set reg1_con5 [pw::Connector create]
 $reg1_con5 addSegment $reg1_seg5

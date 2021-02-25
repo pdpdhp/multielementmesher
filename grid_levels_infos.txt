@@ -8,17 +8,23 @@ total cells: 299469 cells
 
 level 5:
 ------------
-total domains: 40
-total cells: 316004 cells
+total domains: 26
+total cells: 382188 cells
 
 level 4:
 ------------
+total domains: 26
+total cells: 568814 cells
 
 level 3:
 ------------
+total domains: 26
+total cells: 846664 cells
 
 level 2:
 ------------
+total domains: 26
+total cells: 1446814 cells
 
 level 1:
 ------------

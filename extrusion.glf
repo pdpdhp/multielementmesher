@@ -157,8 +157,8 @@ lappend connjoin(3) [[[lindex $blkjoin 2] getEdge 1] getConnector 1]
 lappend connjoin(3) [[[lindex $blkjoin 2] getEdge 1] getConnector 2]
 
 lappend floatd [lindex $blkjoin 2]
-lappend floatd [lindex $blkjoin 2]
-lappend floatedg 1
+lappend fixd [lindex $blkjoin 2]
+lappend fixedg 1
 lappend floatedg 3
 
 set connjoin(4) []
@@ -167,9 +167,9 @@ lappend connjoin(4) [[[lindex $blkjoin 3] getEdge 2] getConnector 1]
 lappend connjoin(4) [[[lindex $blkjoin 3] getEdge 2] getConnector 2]
 
 lappend floatd [lindex $blkjoin 3]
-lappend floatd [lindex $blkjoin 3]
+lappend fixd [lindex $blkjoin 3]
 lappend floatedg 2
-lappend floatedg 4
+lappend fixedg 4
 
 set connjoin(5) []
 

@@ -20,7 +20,7 @@ set airfoil 1
 
 #Grid Levels: varies from the first line of the grid_specification.txt to the last line as the coarsest level!
 #Default values from 6 to 0!
-set res_lev 5
+set res_lev 2
 
 # running structured solver over domains surrounding the config!
 # 1 or 0 for on and off! Runs only if smth is switched off!
@@ -35,8 +35,8 @@ set lsmthiter 3000
 set global_smth 1
 
 # number of iterations to run the global elliptic solver over domains! 
-# >1000 Recommended, Default: 2000
-set gsmthiter 2000
+# >1000 Recommended, Default: 3000
+set gsmthiter 3000
 
 #General chrdwise growth ratio for node distribution over the wing, flap, and slat!
 set srfgr 1.15
@@ -462,7 +462,7 @@ set r3v3m [$r3v3endm getValue $wc [expr [$wc getDimension]-1]]
 
 #=======================================================Spliting Tails==============================
 
-set conl_tail [[lindex $conlowsp 1] split [list [[lindex $conlowsp 1] getParameter -arc 0.0010541302] [[lindex $conlowsp 1] getParameter -arc 0.0013464581]\
+set conl_tail [[lindex $conlowsp 1] split [list [[lindex $conlowsp 1] getParameter -arc 0.0010541302] [[lindex $conlowsp 1] getParameter -arc 0.0010964581]\
 												 [[lindex $conlowsp 1] getParameter -arc 0.0017467905]]]
 
 set conu_tail [[lindex $con_consp 0] split [list [[lindex $con_consp 0] getParameter -arc 0.99772865] [[lindex $con_consp 0] getParameter -arc 0.99721115]]]
@@ -470,9 +470,13 @@ set conu_tail [[lindex $con_consp 0] split [list [[lindex $con_consp 0] getParam
 set reg2_seg5 [pw::SegmentSpline create]
 $reg2_seg5 addPoint [[[lindex $con_flsp 1] getNode End] getXYZ]
 $reg2_seg5 addPoint [[[lindex $conl_tail 1] getNode End] getXYZ]
+$reg2_seg5 setPoint 2 {0.773277475972539 -0.0242089332535906 -0}
+$reg2_seg5 addPoint {0.5782805345198033 -0.5779600307870426 0.0}
 $reg2_seg5 setSlope Free
-$reg2_seg5 setSlopeOut 1 {-0.02927827585138687 -0.10220203093148383 0}
-$reg2_seg5 setSlopeIn 2 {0.053858957478152392 0.20097059467155515 0}
+$reg2_seg5 setSlopeOut 1 {-0.029761489744269176 -0.0034530862702676652 0}
+$reg2_seg5 setSlopeIn 2 {0.01959055083204897 0.015541576752369798 0}
+$reg2_seg5 setSlopeOut 2 {-0.019590550832049081 -0.015541576752369803 0}
+$reg2_seg5 setSlopeIn 3 {0.090030307276867672 0.21537335608652863 0}
 set reg2_con5 [pw::Connector create]
 $reg2_con5 addSegment $reg2_seg5
 
@@ -901,9 +905,13 @@ set midSpcVal [$midScpexm getValue $reg1_con4 [$reg2_con3 getDimension]]
 set segmidcon [pw::SegmentSpline create]
 $segmidcon addPoint [[[lindex $conupsp 0] getNode End] getXYZ]
 $segmidcon addPoint [[[lindex $conl_tail 0] getNode End] getXYZ]
+$segmidcon setPoint 2 {0.738223367226841 -0.0416443542487878 -0}
+$segmidcon addPoint {0.5578368356505192 -0.5719253582914829 0.0}
 $segmidcon setSlope Free
-$segmidcon setSlopeOut 1 {0.0027918748387114611 -0.12235078652442859 0}
-$segmidcon setSlopeIn 2 {0.036577854988315117 0.12727483004428952 0}
+$segmidcon setSlopeOut 1 {0.0026610095105451537 -0.0030644481871643127 0}
+$segmidcon setSlopeIn 2 {0.0011803843908849698 0.018251427194276498 0}
+$segmidcon setSlopeOut 2 {-0.0011803843908849698 -0.018251427194276505 0}
+$segmidcon setSlopeIn 3 {0.081475347378032748 0.16433617575903792 0}
 set reg2_con8 [pw::Connector create]
 $reg2_con8 addSegment $segmidcon
 
@@ -944,8 +952,8 @@ $r2c2spc2 addEntity $reg2_con8
 $r2c2spc2 examine
 set r2c2spcv2 [$r2c2spc2 getValue $reg2_con8 [expr [lindex $r1con4dims 0]+1]]
 
-[lindex $reg2_con5sp 1] addBreakPoint -arc [expr [$reg1_con4 getLength -grid [lindex $r1con4dims 0]]/[$reg1_con4 getLength -arc 1]]
-[lindex $reg2_con5sp 1] addBreakPoint -arc [expr [$reg1_con4 getLength -grid [expr [lindex $r1con4dims 1]+[lindex $r1con4dims 0]]]/[$reg1_con4 getLength -arc 1]]
+[lindex $reg2_con5sp 1] addBreakPoint -arc [expr [$reg1_con4 getLength -grid [lindex $r1con4dims 0]]/[$reg1_con4 getLength -arc 1] + 0.04]
+[lindex $reg2_con5sp 1] addBreakPoint -arc [expr [$reg1_con4 getLength -grid [expr [lindex $r1con4dims 1]+[lindex $r1con4dims 0]]]/[$reg1_con4 getLength -arc 1] + 0.04]
 
 [lindex $reg2_con5sp 1] setSubConnectorDimension [list [expr [lindex $r1con4dims 0]+[[lindex $conupsp 0] getDimension]-1] [lindex $r1con4dims 1] [lindex $r1con4dims 2]]
 
@@ -1320,4 +1328,4 @@ puts $fexmod "min vol: [format "%*e" 5 $domexmv]"
 puts $fexmod "runtime: $runtime sec" 
 close $fexmod
 
-puts "Finished! Grid Level $res_lev generated!"
+puts "Finished! Grid level $res_lev generated!"
