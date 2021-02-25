@@ -5,67 +5,77 @@ These scripts written to generate multi-block structured grid for the CRM high-l
 
 ### Scripts
 topoprepare.glf:
-Divides the domain into different sections and prepare the configuration to generate the multi-block structured grid.
+Divides the domain and prepare the multi-element airfoil for multi-block structured grid.
 
 mesher.glf:
-Generates the mesh and calls on the extrusion in order to extrude the generated domain into a c-type domain.
+Generates the mesh and calls on the extrusion.glf in order to extrude the first layer of structured domains.
 
 extrusion.glf:
-Extrude the outer boundary of generated domain and gets to the final c-type shape.
+Extrudes the outer boundary of first layer of structured layer until it gets to the final c-type shape.
 
 smoother.glf:
-runs the elliptic solver over domains surrounding the configuration and over the outer c-type domains separately.
+Runs the elliptic solver over domains.
 
 output.txt:
-provides number of domains, number of cells and run time.
+Provides summary info including number of domains, number of cells, minimum area and script's run-time.
 
 grid_specification.txt:
-provides grid guideline or specification for the different grid levels.
+Provides grid guideline and specifications used to generate the multi-block structured grids.
 
 flow_propertise.txt:
-specifies the flow condition.
+Indicates info of the flow condition.
 
 ### Parameters
 
-These parameters in the mesher.glf can be used to customize the grid:
+These parameters on the top of the mesher.glf can be used to customize the grid:
 
 ```Tcl
-#Grid Levels: varies from the first line of the grid_specification.txt to the last line as the coarsest level!
-#Values from 6 to 0!
-set res_lev 6
+#airfoil configuration selection 
+#Currently only 2-D CRM-HL wing section is supported!
+#DONT CHANGE THIS!
+set airfoil 1
 
-# switch for running elliptic solver over domains surrounding the configuration!
-# values: 1 or 0 for on and off! Recommended!
-set slv_switch 1
+#Grid Levels: vary from 6 to 0 according to the first line of the grid_specification.txt till the last line as the coarsest level!
+#values from 6 to 0 (coarse --> fine)
+set res_lev 5
 
-# running elliptic solver over domains surrounding the config together with other domains!
-# values: 1 or 0 for on and off!
-set smth 1
+# switch to run elliptic solver over local strcutured domains in the first layer (e.g. close to the configuration)
+# values 1 or 0. Runs only if global is off.
+set local_smth 0
 
-# running elliptic solver over outer c-type domain!
-# values: 1 or 0 for on and off! only if smoothing switch above is on, it can be considered!
-set smth_b 1
+# number of iterations to run the local elliptic solver.
+# >1000 Recommended, Default: 3000
+set lsmthiter 3000
 
-#General chrdwise growth ratio for node distribution over the wing, flap, and slat!
+# running elliptic solver over all domains excluding boundary layer's domains.
+# values 1 or 0.
+set global_smth 1
+
+# number of iterations to run the global elliptic solver over domains.
+# >1000 Recommended, Default: 2000
+set gsmthiter 4000
+
+#general chrdwise growth ratio for node distribution over the wing, flap, and slat!
 set srfgr 1.15
 
 #chrdwise growth ratio for node distribution over the wing's lower surface!
-set srfgrwl 1.18
+set srfgrwl 1.1
 
 #chrdwise growth ratio for node distribution over the slat's upper surface!
 set srfgrfu 1.18
 
-# CAE solver! Exp. SU2 or CGNS 
+#CAE solver for which the mesh is generated! Exp. SU2 or CGNS 
 set cae_solver CGNS
 
-#initial growth ratios for node distribitons!
-# region 1 con 1 growth ratio --> region 1 refers to the region on top of the slat!
+#initial growth ratios for node distribitons.
+#--------------------------------------------
+#region 1 connector 1 growth ratio --> region 1 refers to the region on top of the slat!
 set r1c1gr 1.09
 
-# region 2 con 3 growth ratio --> region 2 refers to the region on top of the wing!
+#region 2 connector 3 growth ratio --> region 2 refers to the region on top of the wing!
 set r2c3gr 1.09
 
-# region 3 con 1 growth ratio --> region 3 refers to the region on top of the flap!
+#region 3 connector 1 growth ratio --> region 3 refers to the region on top of the flap!
 set r3c1gr 1.09
 ```
 
