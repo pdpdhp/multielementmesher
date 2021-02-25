@@ -3,23 +3,19 @@ General info for generated grid levels:
 
 level 6:
 ------------
-total domains: 26
-total cells: 299469 cells
+total cells: 300189 cells
 
 level 5:
 ------------
-total domains: 26
-total cells: 382188 cells
+total cells: 382994 cells
 
 level 4:
 ------------
-total domains: 26
-total cells: 568814 cells
+total cells: 569760 cells
 
 level 3:
 ------------
-total domains: 26
-total cells: 846664 cells
+total cells: 848329 cells
 
 level 2:
 ------------

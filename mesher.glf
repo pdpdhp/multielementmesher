@@ -20,7 +20,7 @@ set airfoil 1
 
 #Grid Levels: varies from the first line of the grid_specification.txt to the last line as the coarsest level!
 #Default values from 6 to 0!
-set res_lev 2
+set res_lev 3
 
 # running structured solver over domains surrounding the config!
 # 1 or 0 for on and off! Runs only if smth is switched off!
@@ -51,6 +51,7 @@ set srfgrfu 1.18
 set cae_solver CGNS
 
 #initial growth ratios for node distribitons!
+#--------------------------------------------
 # region 1 con 1 growth ratio --> region 1 refers to the region on top of the slat!
 set r1c1gr 1.09
 
