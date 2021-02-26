@@ -1,7 +1,7 @@
 2D CRM Section Structured Mesher
 ================================
 
-These scripts written to generate multi-block structured grid for the CRM high-lift 2D section. Grid specifications are in the same folder. In overall, seven grid refinement levels are defined based on the flow properties.
+These scripts written to generate multi-block structured grid for the CRM high-lift 2D section. In overall, seven grid refinement levels are defined based on the flow properties and grid guideline specifications.
 
 ### Scripts
 topoprepare.glf:
@@ -30,32 +30,25 @@ Indicates info of the flow condition.
 These parameters on the top of the mesher.glf can be used to customize the grid:
 
 ```Tcl
-#airfoil configuration selection 
-#Currently only 2-D CRM-HL wing section is supported!
-#DONT CHANGE THIS!
-set airfoil 1
+#Grid Levels: varies from the first line of the grid_specification.txt to the last line as the coarsest level!
+#Default values from 6 to 0!
+set res_lev 6
 
-#Grid Levels: vary from 6 to 0 according to the first line of the grid_specification.txt till the last line as the coarsest level!
-#values from 6 to 0 (coarse --> fine)
-set res_lev 5
+# running structured solver over domains surrounding the config! (YES/NO)
+set local_smth NO
 
-# switch to run elliptic solver over local strcutured domains in the first layer (e.g. close to the configuration)
-# values 1 or 0. Runs only if global is off.
-set local_smth 0
-
-# number of iterations to run the local elliptic solver.
-# >1000 Recommended, Default: 3000
-set lsmthiter 3000
-
-# running elliptic solver over all domains excluding boundary layer's domains.
-# values 1 or 0.
-set global_smth 1
-
-# number of iterations to run the global elliptic solver over domains.
+# number of iterations to run the local elliptic solver over domains! 
 # >1000 Recommended, Default: 2000
-set gsmthiter 4000
+set lsmthiter 2000
 
-#general chrdwise growth ratio for node distribution over the wing, flap, and slat!
+# running elliptic solver over domains surrounding the config! (YES/NO)
+set global_smth YES
+
+# number of iterations to run the global elliptic solver over domains! 
+# >1000 Recommended, Default: 3000
+set gsmthiter 3000
+
+#General chrdwise growth ratio for node distribution over the wing, flap, and slat!
 set srfgr 1.15
 
 #chrdwise growth ratio for node distribution over the wing's lower surface!
@@ -64,18 +57,24 @@ set srfgrwl 1.1
 #chrdwise growth ratio for node distribution over the slat's upper surface!
 set srfgrfu 1.18
 
-#CAE solver for which the mesh is generated! Exp. SU2 or CGNS 
+# specify the CAE solver you want the mesh to be generated! Exp. SU2 or CGNS 
 set cae_solver CGNS
 
-#initial growth ratios for node distribitons.
+# enable CAE export (YES/NO)
+set cae_export YES
+
+# saving native format (YES/NO)
+set save_native YES
+
+#initial growth ratios for node distributions!
 #--------------------------------------------
-#region 1 connector 1 growth ratio --> region 1 refers to the region on top of the slat!
+# region 1 con 1 growth ratio --> region 1 refers to the region on top of the slat!
 set r1c1gr 1.09
 
-#region 2 connector 3 growth ratio --> region 2 refers to the region on top of the wing!
+# region 2 con 3 growth ratio --> region 2 refers to the region on top of the wing!
 set r2c3gr 1.09
 
-#region 3 connector 1 growth ratio --> region 3 refers to the region on top of the flap!
+# region 3 con 1 growth ratio --> region 3 refers to the region on top of the flap!
 set r3c1gr 1.09
 ```
 

@@ -43,6 +43,7 @@ set orthod []
 set orthoedg []
 set fixd []
 set fixedg []
+set bldoms []
 
 if {$airfoil==1} {
 	puts "2-D CRM-HL wing section: fully structured multi-block grid generator!"
@@ -464,7 +465,7 @@ set con_flapsp [$fu split [$fu getParameter -closest [$wexcon getXYZ -arc 1]]]
 [lindex $con_flapsp 1] setDimension [$wc getDimension]
 set fuseg1 [pw::DistributionGeneral create [list $wc]]
 $fuseg1 setBeginSpacing $ler_sg
-$fuseg1 setEndSpacing $wcfv
+$fuseg1 setEndSpacing [expr $wcfv*2]
 $fuseg1 setVariable [[[lindex $con_flapsp 1] getDistribution 1] getVariable]
 [lindex $con_flapsp 1] setDistribution -lockEnds 1 $fuseg1
 
@@ -503,9 +504,9 @@ $upsrff1 setEndRate $laySpcGR
 set fusp [[lindex $con_flapsp 0] split [list [[lindex $con_flapsp 0] getParameter -arc 0.0032]]]
 
 set lowsrff [pw::DistributionGrowth create]
-$lowsrff setBeginSpacing $fupf
+$lowsrff setBeginSpacing [expr $fupf*2]
 $lowsrff setEndSpacing $ler_sg
-set laySpcBegin $fupf
+set laySpcBegin [expr $fupf*2]
 set laySpcEnd $ler_sg
 
 set midSpc [expr 3*$chord_sg]

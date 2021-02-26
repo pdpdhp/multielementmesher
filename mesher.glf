@@ -20,19 +20,17 @@ set airfoil 1
 
 #Grid Levels: varies from the first line of the grid_specification.txt to the last line as the coarsest level!
 #Default values from 6 to 0!
-set res_lev 3
+set res_lev 4
 
-# running structured solver over domains surrounding the config!
-# 1 or 0 for on and off! Runs only if smth is switched off!
-set local_smth 0
+# running structured solver over domains surrounding the config! (YES/NO)
+set local_smth YES
 
 # number of iterations to run the local elliptic solver over domains! 
-# >1000 Recommended, Default: 3000
-set lsmthiter 3000
+# >1000 Recommended, Default: 2000
+set lsmthiter 2
 
-# running elliptic solver over domains surrounding the config!
-# 1 or 0 for on and off!
-set global_smth 1
+# running elliptic solver over domains surrounding the config! (YES/NO)
+set global_smth YES
 
 # number of iterations to run the global elliptic solver over domains! 
 # >1000 Recommended, Default: 3000
@@ -50,7 +48,13 @@ set srfgrfu 1.18
 # specify the CAE solver you want the mesh to be generated! Exp. SU2 or CGNS 
 set cae_solver CGNS
 
-#initial growth ratios for node distribitons!
+# enable CAE export (YES/NO)
+set cae_export YES
+
+# saving native format (YES/NO)
+set save_native YES
+
+#initial growth ratios for node distributons!
 #--------------------------------------------
 # region 1 con 1 growth ratio --> region 1 refers to the region on top of the slat!
 set r1c1gr 1.09
@@ -207,18 +211,23 @@ set s_domsp [$s_dom split -I [list [$ste getDimension] [expr [$ste getDimension]
 
 $domexm addEntity [lindex $s_domsp 0]
 lappend ncells [[lindex $s_domsp 0] getCellCount]
+lappend bldoms [lindex $s_domsp 0]
 
 $domexm addEntity [lindex $s_domsp 1]
 lappend ncells [[lindex $s_domsp 1] getCellCount]
+lappend bldoms [lindex $s_domsp 1]
 
 $domexm addEntity [lindex $s_domsp 2]
 lappend ncells [[lindex $s_domsp 2] getCellCount]
+lappend bldoms [lindex $s_domsp 2]
 
 $domexm addEntity [lindex $s_domsp 3]
 lappend ncells [[lindex $s_domsp 3] getCellCount]
+lappend bldoms [lindex $s_domsp 3]
 
 $domexm addEntity [lindex $s_domsp 4]
 lappend ncells [[lindex $s_domsp 4] getCellCount]
+lappend bldoms [lindex $s_domsp 4]
 
 set f_domsp [$f_dom split -I [list [$fte getDimension] [expr [$fte getDimension]+[[lindex $con_fusp 1] getDimension]-1]\
 	[expr [$fte getDimension]+[[lindex $con_fusp 0] getDimension]+[[lindex $con_fusp 1] getDimension] - 2]\
@@ -228,21 +237,27 @@ set f_domsp [$f_dom split -I [list [$fte getDimension] [expr [$fte getDimension]
 
 $domexm addEntity [lindex $f_domsp 0]
 lappend ncells [[lindex $f_domsp 0] getCellCount]
+lappend bldoms [lindex $f_domsp 0]
 
 $domexm addEntity [lindex $f_domsp 1]
 lappend ncells [[lindex $f_domsp 1] getCellCount]
+lappend bldoms [lindex $f_domsp 1]
 
 $domexm addEntity [lindex $f_domsp 2]
 lappend ncells [[lindex $f_domsp 2] getCellCount]
+lappend bldoms [lindex $f_domsp 2]
 
 $domexm addEntity [lindex $f_domsp 3]
 lappend ncells [[lindex $f_domsp 3] getCellCount]
+lappend bldoms [lindex $f_domsp 3]
 
 $domexm addEntity [lindex $f_domsp 4]
 lappend ncells [[lindex $f_domsp 4] getCellCount]
+lappend bldoms [lindex $f_domsp 4]
 
 $domexm addEntity [lindex $f_domsp 5]
 lappend ncells [[lindex $f_domsp 5] getCellCount]
+lappend bldoms [lindex $f_domsp 5]
 
 set wte1cs [[[lindex $a_domsp 0] getEdge 2] getConnector 1]
 set wte2cs $wexcon
@@ -470,14 +485,13 @@ set conu_tail [[lindex $con_consp 0] split [list [[lindex $con_consp 0] getParam
 
 set reg2_seg5 [pw::SegmentSpline create]
 $reg2_seg5 addPoint [[[lindex $con_flsp 1] getNode End] getXYZ]
+$reg2_seg5 addPoint {0.77195588304284 -0.0253690926350217 -0}
 $reg2_seg5 addPoint [[[lindex $conl_tail 1] getNode End] getXYZ]
-$reg2_seg5 setPoint 2 {0.773277475972539 -0.0242089332535906 -0}
-$reg2_seg5 addPoint {0.5782805345198033 -0.5779600307870426 0.0}
 $reg2_seg5 setSlope Free
-$reg2_seg5 setSlopeOut 1 {-0.029761489744269176 -0.0034530862702676652 0}
-$reg2_seg5 setSlopeIn 2 {0.01959055083204897 0.015541576752369798 0}
-$reg2_seg5 setSlopeOut 2 {-0.019590550832049081 -0.015541576752369803 0}
-$reg2_seg5 setSlopeIn 3 {0.090030307276867672 0.21537335608652863 0}
+$reg2_seg5 setSlopeOut 1 {-0.0064386909455151908 -0.0042006839916895354 0}
+$reg2_seg5 setSlopeIn 2 {0.022144067099189035 0.023520195045794601 0}
+$reg2_seg5 setSlopeOut 2 {-0.022144067099189035 -0.023520195045794601 0}
+$reg2_seg5 setSlopeIn 3 {0.07755790499773163 0.16353618762694061 0}
 set reg2_con5 [pw::Connector create]
 $reg2_con5 addSegment $reg2_seg5
 
@@ -509,7 +523,7 @@ $covspc examine
 set covspcv [$covspc getValue $wccon2 1]
 
 set reg5dis [pw::DistributionGrowth create]
-$reg5dis setBeginSpacing $r3v3s
+$reg5dis setBeginSpacing [expr $r3v3s*2]
 $reg5dis setEndSpacing $covspcv
 set laySpcBegin $r3v3s
 set laySpcEnd $covspcv
@@ -542,21 +556,27 @@ $wccon2 setDimension [expr [[lindex $reg2_con5sp 0] getDimension] + [[lindex $co
 
 $domexm addEntity [lindex $a_domsp 0]
 lappend ncells [[lindex $a_domsp 0] getCellCount]
+lappend bldoms [lindex $a_domsp 0]
 
 $domexm addEntity [lindex $a_domsp 1]
 lappend ncells [[lindex $a_domsp 1] getCellCount]
+lappend bldoms [lindex $a_domsp 1]
 
 $domexm addEntity [lindex $a_domsp 2]
 lappend ncells [[lindex $a_domsp 2] getCellCount]
+lappend bldoms [lindex $a_domsp 2]
 
 $domexm addEntity [lindex $a_domsp 3]
 lappend ncells [[lindex $a_domsp 3] getCellCount]
+lappend bldoms [lindex $a_domsp 3]
 
 $domexm addEntity [lindex $a_domsp 4]
 lappend ncells [[lindex $a_domsp 4] getCellCount]
+lappend bldoms [lindex $a_domsp 4]
 
 $domexm addEntity [lindex $a_domsp 5]
 lappend ncells [[lindex $a_domsp 5] getCellCount]
+lappend bldoms [lindex $a_domsp 5]
 
 # 3. BTW FLAP AND WING
 set r3_blk3 [pw::DomainStructured createFromConnectors [list [lindex $con_flapsp 0] $wc $reg3_con2 $reg3_con3 [lindex $reg2_con5sp 0]]]
@@ -1276,7 +1296,7 @@ lappend adjbcs 1
 
 #=========================================================solve domains======================================
 # running structured solver over structured domains surrounding the configuration -- local_smth turns it off!
-if {$local_smth == 1 && $global_smth == 0} {
+if {[string compare $local_smth YES]==0 && [string compare $global_smth NO]==0} {
 	set dsolve [pw::Application begin EllipticSolver $doms]
 	set dom_dsolve []
 	set bc_dsolve []
@@ -1316,17 +1336,105 @@ if {$local_smth == 1 && $global_smth == 0} {
 
 source [file join $scriptDir "extrusion.glf"]
 
+#=================================================CAE Export--=====================================================
+
 $domexm examine
 set domexmv [$domexm getMinimum]
 
 set time_end [pwu::Time now]
 set runtime [pwu::Time subtract $time_end $time_start]
+set tmin [expr int([lindex $runtime 0]/60)]
+set tsec [expr [lindex $runtime 0]%60]
+set tmsec [expr int(floor([lindex $runtime 1]/1000))]
+set ncell [expr [join $ncells +]]
+set gorder [string length $ncell]
+
+if {$gorder<7} {
+	set gridID "[string range $ncell 0 2]k"
+} elseif {$gorder>7 && $gorder<10} {
+	set gridID "[string range $ncell 0 2]m[string range $ncell 3 5]k"
+}
 
 set fexmod [open "$scriptDir/output.txt" w]
 puts $fexmod "total domains: [llength $ncells]"
-puts $fexmod "total cells: [expr [join $ncells +]] cells"
-puts $fexmod "min vol: [format "%*e" 5 $domexmv]"
-puts $fexmod "runtime: $runtime sec" 
+puts $fexmod "total cells: $ncell cells"
+puts $fexmod "min area: [format "%*e" 5 $domexmv]"
+puts $fexmod "runtime: $tmin min $tsec sec $tmsec ms" 
+puts $fexmod [string repeat - 50]
+
+if {[string compare $cae_export YES]==0} {
+	# gathering all domains
+	set alldoms [list {*}$bldoms {*}$smthd]
+
+	# creating export directory
+	set exportDir [file join $scriptDir grids]
+
+	file mkdir $exportDir
+
+	# CAE specificity in the output file!
+	puts $fexmod "Current solver: [set curSolver [pw::Application getCAESolver]]"
+
+	set validExts [pw::Application getCAESolverAttribute FileExtensions]
+	puts $fexmod "Valid file extensions: '$validExts'"
+
+	set defExt [lindex $validExts 0]
+
+	set caex [pw::Application begin CaeExport $alldoms]
+	append gridname lev $res_lev "_" $gridID
+
+	set destType [pw::Application getCAESolverAttribute FileDestination]
+	switch $destType {
+		Filename { set dest [file join $exportDir "$gridname.$defExt"] }
+		Folder   { set dest $exportDir }
+		default  { return -code error "Unexpected FileDestination value" }
+	}
+	puts $fexmod "Exporting to $destType: '$dest'"
+	puts $fexmod [string repeat - 50]
+
+	# Initialize the CaeExport mode
+	set status abort  ;
+	if { ![$caex initialize $dest] } {
+		puts $fexmod {$caex initialize failed!}
+	} else {
+		set dashes [string repeat - 50]
+		if { ![catch {$caex setAttribute FilePrecision Double}] } {
+			puts $fexmod "setAttribute FilePrecision Double"
+		}
+
+		if { ![$caex verify] } {
+			puts $fexmod {$caex verify failed!}
+		} elseif { ![$caex canWrite] } {
+			puts $fexmod {$caex canWrite failed!}
+		} elseif { ![$caex write] } {
+			puts $fexmod {$caex write failed!}
+		} elseif { 0 != [llength [set feCnts [$caex getForeignEntityCounts]]] } {
+		# print entity counts reported by the exporter
+		set fmt {   %-22.22s | %6.6s |}
+		puts $fexmod "Number of grid entities exported:"
+		puts $fexmod [format $fmt {Entity Type} Count]
+		puts $fexmod [format $fmt $dashes $dashes]
+		dict for {key val} $feCnts {
+			puts $fexmod [format $fmt $key $val]
+		}
+		set status end ;# all is okay now
+		}
+	}
+
+	# Display any errors/warnings
+	set errCnt [$caex getErrorCount]
+	for {set ndx 1} {$ndx <= $errCnt} {incr ndx} {
+		puts $fexmod "[$caex getErrorCode $ndx]: '[$caex getErrorInformation $ndx]'"
+	}
+	# abort/end the CaeExport mode
+	$caex $status
+}
+
+if {[string compare $save_native YES]==0} {
+	set exportDir [file join $scriptDir grids]
+	file mkdir $exportDir
+	pw::Application save "$exportDir/$gridname.pw"
+}
+
 close $fexmod
 
-puts "Finished! Grid level $res_lev generated!"
+puts "Grid level $res_lev generated"

@@ -110,10 +110,10 @@ lappend floatedg 4
 lappend fixd $dom_blk3
 lappend fixedg 2
 
-lappend floatd $blk4
-lappend floatd $blk4
-lappend floatedg 2 
-lappend floatedg 4
+lappend fixd $blk4
+lappend fixd $blk4
+lappend fixedg 2 
+lappend fixedg 4
 lappend fixd $blk4
 lappend fixedg 1
 
@@ -134,10 +134,10 @@ lappend connjoin(1) [[[lindex $blkjoin 0] getEdge 4] getConnector 1]
 lappend connjoin(1) [[[lindex $blkjoin 0] getEdge 4] getConnector 2]
 lappend connjoin(1) [[[lindex $blkjoin 0] getEdge 4] getConnector 3]
 
-lappend floatd [lindex $blkjoin 0]
-lappend floatd [lindex $blkjoin 0]
-lappend floatedg 1
-lappend floatedg 4
+lappend fixd [lindex $blkjoin 0]
+lappend fixd [lindex $blkjoin 0]
+lappend fixedg 1
+lappend fixedg 4
 
 set connjoin(2) []
 
@@ -145,10 +145,10 @@ lappend connjoin(2) [[[lindex $blkjoin 1] getEdge 1] getConnector 3]
 lappend connjoin(2) [[[lindex $blkjoin 1] getEdge 1] getConnector 4]
 
 lappend floatd [lindex $blkjoin 1]
-lappend floatd [lindex $blkjoin 1]
+lappend fixd [lindex $blkjoin 1]
 lappend fixd [lindex $blkjoin 1]
 lappend floatedg 1
-lappend floatedg 3
+lappend fixedg 3
 lappend fixedg 4
 
 set connjoin(3) []
@@ -196,9 +196,9 @@ lappend connjoin(7) [[[lindex $blkjoin 6] getEdge 1] getConnector 2]
 lappend connjoin(7) [[[lindex $blkjoin 6] getEdge 1] getConnector 3]
 
 lappend orthod [lindex $blkjoin 6]
-lappend floatd [lindex $blkjoin 6]
+lappend fixd [lindex $blkjoin 6]
 lappend orthoedg 1
-lappend floatedg 4
+lappend fixedg 4
 
 set conjoin []
 

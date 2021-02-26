@@ -19,7 +19,7 @@ set scriptDir [file dirname [info script]]
 
 # running elliptic solver over domains surrounding the configuration
 
-if {$global_smth == 1} {
+if {[string compare $global_smth YES]==0} {
 
 	set smth1 [pw::Application begin EllipticSolver $smthd]
 
