@@ -20,20 +20,20 @@ set airfoil 1
 
 #Grid Levels vary from the first line of the grid_specification.txt to the last line as the coarsest level!
 #Default values from 6 to 0!
-set res_lev 0
+set res_lev 6
 
-# running structured elliptic solver over local domains surrounding the config (e.g. near the configuration) (YES/NO)
+# running structured elliptic solver over local domains only if global is switched off (e.g. near the configuration) (YES/NO)
 set local_smth YES
 
 # number of iterations to run the local elliptic solver.
-# Default: 2000 (>1000 Recommended)
-set lsmthiter 2
+# (>1000 Recommended)
+set lsmthiter 2000
 
 # running elliptic solver over all domains excluding boundary layers. (YES/NO)
 set global_smth YES
 
 # number of iterations to run the global elliptic solver.
-# Default: 3000 (>1000 Recommended)
+# (>1000 Recommended)
 set gsmthiter 3000
 
 #General chrdwise growth ratio for node distribution over the wing, flap, and slat.
@@ -54,7 +54,7 @@ set cae_export YES
 #saves the native format (YES/NO)
 set save_native YES
 
-#Initial growth ratios for node distributons!
+#Initial growth ratios for node distributions!
 #--------------------------------------------
 # region 1 con 1 growth ratio --> region 1 refers to the region on top of the slat!
 set r1c1gr 1.09
