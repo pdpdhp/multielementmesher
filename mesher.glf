@@ -13,48 +13,48 @@ package require PWI_Glyph 3.18.3
 
 set scriptDir [file dirname [info script]]
 
-#airfoil configuration selection 
+#multi-element airfoil selection 
 #Currently only 2-D CRM-HL wing section is supported!
 #DONT CHANGE THIS!
 set airfoil 1
 
-#Grid Levels: varies from the first line of the grid_specification.txt to the last line as the coarsest level!
+#Grid Levels vary from the first line of the grid_specification.txt to the last line as the coarsest level!
 #Default values from 6 to 0!
-set res_lev 4
+set res_lev 0
 
-# running structured solver over domains surrounding the config! (YES/NO)
+# running structured elliptic solver over local domains surrounding the config (e.g. near the configuration) (YES/NO)
 set local_smth YES
 
-# number of iterations to run the local elliptic solver over domains! 
-# >1000 Recommended, Default: 2000
+# number of iterations to run the local elliptic solver.
+# Default: 2000 (>1000 Recommended)
 set lsmthiter 2
 
-# running elliptic solver over domains surrounding the config! (YES/NO)
+# running elliptic solver over all domains excluding boundary layers. (YES/NO)
 set global_smth YES
 
-# number of iterations to run the global elliptic solver over domains! 
-# >1000 Recommended, Default: 3000
+# number of iterations to run the global elliptic solver.
+# Default: 3000 (>1000 Recommended)
 set gsmthiter 3000
 
-#General chrdwise growth ratio for node distribution over the wing, flap, and slat!
+#General chrdwise growth ratio for node distribution over the wing, flap, and slat.
 set srfgr 1.15
 
-#chrdwise growth ratio for node distribution over the wing's lower surface!
+#chrdwise growth ratio for node distribution over the wing's lower surface.
 set srfgrwl 1.1
 
-#chrdwise growth ratio for node distribution over the slat's upper surface!
+#chrdwise growth ratio for node distribution over the slat's upper surface.
 set srfgrfu 1.18
 
-# specify the CAE solver you want the mesh to be generated! Exp. SU2 or CGNS 
+#CAE solver selection. (Exp. SU2 or CGNS)
 set cae_solver CGNS
 
-# enable CAE export (YES/NO)
+#enables CAE export (YES/NO)
 set cae_export YES
 
-# saving native format (YES/NO)
+#saves the native format (YES/NO)
 set save_native YES
 
-#initial growth ratios for node distributons!
+#Initial growth ratios for node distributons!
 #--------------------------------------------
 # region 1 con 1 growth ratio --> region 1 refers to the region on top of the slat!
 set r1c1gr 1.09
@@ -1351,8 +1351,8 @@ set gorder [string length $ncell]
 
 if {$gorder<7} {
 	set gridID "[string range $ncell 0 2]k"
-} elseif {$gorder>7 && $gorder<10} {
-	set gridID "[string range $ncell 0 2]m[string range $ncell 3 5]k"
+} elseif {$gorder>=7 && $gorder<10} {
+	set gridID "[string range [expr $ncell/1000000] 0 2]m[string range [expr int($ncell%1000000)] 0 2]k"
 }
 
 set fexmod [open "$scriptDir/output.txt" w]
