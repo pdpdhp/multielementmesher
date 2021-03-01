@@ -82,7 +82,7 @@ set r3c1gr 1.09
 To run the script, open up the mesher.glf in your text editor and set up the above mentioned parameters on the top of the script and run the mesher.glf in Pointwise. In batch mode you can execute:
 
 ```shell
-pointwise mesher.glf
+pointwise -b mesher.glf
 ```
 All the grid generation procedure is automated. The script's summary appears in the output.txt in the root directory after the script is done and you will find meshes in the grids directory in the root.
 
