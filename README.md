@@ -77,6 +77,16 @@ set r2c3gr 1.09
 # region 3 con 1 growth ratio --> region 3 refers to the region on top of the flap!
 set r3c1gr 1.09
 ```
+### Instruction
+
+To run the script, open up the mesher.glf in your text editor and set up the above mentioned parameters on the top of the script and run the mesher.glf in Pointwise. In batch mode you can execute:
+
+```shell
+pointwise mesher.glf
+```
+All the grid generation procedure is automated. The script's summary appears in the output.txt in the root directory after the script is done and you will find meshes in the grids directory in the root.
+
+Th mesher.glf is handling all the scripts and first calls on the toprepare.glf to import and prepare the configuration, divides the topology and creates the boundary layer blocks for each elements. Then, it creates the first layer of multi-block structured domains and calls on the extrusion.glf. Extrusion script extrudes the outer boundary of the first multi-block structured grid untill it reaches to the c-type domain and calls on the smoother.glf to run the elliptic solver on all domains excluding boundary layer blocks.
 
 ![result](https://github.com/pdpdhp/multielementmesher/blob/master/grid.png)
 
