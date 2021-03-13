@@ -131,7 +131,7 @@ The local and global smoothers are based on muligrid approach to solve the ellip
 
 The script can generate 2D or quasi 2D grids at the same time. The quasi 2d grid is translation of the 2d grid in -y direction. Translation's distance can be set by the parameter 'span' in the mesher.glf. Number of points in the span direction can be selected by setting 'fixed_snodes' to YES and assigning number of points to the 'span_dimension' parameter. If 'fixed_snodes' set to NO, 'span_dimension' will be ignored and number of points in the span direction automatically will be measured based on the maximum chordwise spacing on the upper surfaces of wing, slat and flap. For both types of grids, approximately upstream reaches to 1200c and downstream is about 7000c.
 
-### Boundary Condition
+### Boundary condition
 
 For both 2D and quasi 2D grids boundary conditions are assigned appropriately to the right boundaries but are not set. Based on the solver, they can be set in Pointwise.
 
