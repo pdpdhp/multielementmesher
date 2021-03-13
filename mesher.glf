@@ -5,7 +5,7 @@
 #==============================================================
 #
 # written by Pay Dehpanah
-# Feb 2020 
+# Mar 2021
 # 
 #==============================================================
 
@@ -24,9 +24,9 @@ set airfoil 1
 #--------------------------------------------
 #Grid Levels vary from the first line of the grid_specification.txt to the last line as the coarsest level!
 #Default values from 6 to 0!
-set res_lev 5
+set res_lev 6
 
-#LOCAL AND GLOBAL SMOOTHERS:
+#LOCAL AND GLOBAL SMOOTHER:
 #--------------------------------------------
 # running structured elliptic solver over local domains only if global is switched off (e.g. near the configuration) (YES/NO)
 set local_smth NO
@@ -40,17 +40,17 @@ set global_smth YES
 
 # number of iterations to run the global elliptic solver.
 # (>1000 Recommended)
-set gsmthiter 300
+set gsmthiter 3000
 
 #GROWTH RATIOS:
 #--------------------------------------------
-#General chrdwise growth ratio for node distribution over the wing, flap, and slat.
+#General chordwise growth ratio for node distribution over the wing, flap, and slat.
 set srfgr 1.15
 
-#chrdwise growth ratio for node distribution over the wing's lower surface.
+#chordwise growth ratio for node distribution over the wing's lower surface.
 set srfgrwl 1.1
 
-#chrdwise growth ratio for node distribution over the slat's upper surface.
+#chordwise growth ratio for node distribution over the slat's upper surface.
 set srfgrfu 1.18
 
 #GRID DIMENSION:
