@@ -21,15 +21,15 @@ set scriptDir [file dirname [info script]]
 set xtr1 200
 
 set spcgrfact [list 1.08 1.1 1.12 1.15]
-set sply [list 0.001 0.0025 0.005 0.01 0.01 0.015 0.02]
-set levratio [list 0.9 1 2 3 4 5 6]
+set sply [list 0.0003 0.0004 0.0005 0.001 0.003 0.01 0.03]
+set levratio [list 0.9999 1 2 3 4 5 6]
 
 for {set i 0} {$i<[llength $spcgrfact]} {incr i} {
 	lappend spcextrgr [expr ([lindex $spcgrfact $i] - 1)*([lindex $levratio $res_lev]/6.0) + 1]
 }
 
 
-set maxstpsize [list 12 24]
+set maxstpsize [list 12 24 48 96 192 384]
 
 for {set i 0} {$i<[llength $maxstpsize]} {incr i} {
 	lappend maxstpextr [expr [lindex $maxstpsize $i]*([lindex $levratio $res_lev]/6.0)]
@@ -50,7 +50,7 @@ $blkxtr setExtrusionBoundaryConditionStepSuppression End 0
 $blkxtr setExtrusionSolverAttribute NormalInitialStepSize $texrv
 $blkxtr setExtrusionSolverAttribute SpacingGrowthFactor [lindex $spcextrgr 0]
 $blkxtr setExtrusionSolverAttribute NormalMaximumStepSize 0.0
-$blkxtr setExtrusionSolverAttribute StopAtHeight 25
+$blkxtr setExtrusionSolverAttribute StopAtHeight 50
 $blkxtr setExtrusionSolverAttribute NormalExplicitSmoothing 0.1
 $blkxtr setExtrusionSolverAttribute NormalImplicitSmoothing 0.2
 $blkxtr setExtrusionSolverAttribute NormalKinseyBarthSmoothing 0.0
@@ -58,32 +58,32 @@ $blkxtr setExtrusionSolverAttribute NormalVolumeSmoothing 0.0001
 $sxtr run $xtr1
 $blkxtr setExtrusionSolverAttribute SpacingGrowthFactor [lindex $spcextrgr 1]
 $blkxtr setExtrusionSolverAttribute NormalMaximumStepSize [lindex $maxstpextr 0]
-$blkxtr setExtrusionSolverAttribute StopAtHeight 75
-$blkxtr setExtrusionSolverAttribute NormalVolumeSmoothing 0.005
+$blkxtr setExtrusionSolverAttribute StopAtHeight 150
+$blkxtr setExtrusionSolverAttribute NormalVolumeSmoothing 0.001
 $sxtr run $xtr1
 $blkxtr setExtrusionSolverAttribute SpacingGrowthFactor [lindex $spcextrgr 2]
 $blkxtr setExtrusionSolverAttribute NormalMaximumStepSize [lindex $maxstpextr 1]
-$blkxtr setExtrusionSolverAttribute StopAtHeight 100
-$blkxtr setExtrusionSolverAttribute NormalVolumeSmoothing 0.009
+$blkxtr setExtrusionSolverAttribute StopAtHeight 300
+$blkxtr setExtrusionSolverAttribute NormalVolumeSmoothing 0.003
 $sxtr run $xtr1
 $blkxtr setExtrusionSolverAttribute SpacingGrowthFactor [lindex $spcextrgr 3]
-$blkxtr setExtrusionSolverAttribute StopAtHeight 125
-$blkxtr setExtrusionSolverAttribute NormalVolumeSmoothing 0.013
+$blkxtr setExtrusionSolverAttribute NormalMaximumStepSize [lindex $maxstpextr 2]
+$blkxtr setExtrusionSolverAttribute StopAtHeight 600
+$blkxtr setExtrusionSolverAttribute NormalVolumeSmoothing 0.005
 $sxtr run $xtr1
-$blkxtr setExtrusionSolverAttribute StopAtHeight 150
-$blkxtr setExtrusionSolverAttribute NormalVolumeSmoothing 0.015
+$blkxtr setExtrusionSolverAttribute NormalMaximumStepSize [lindex $maxstpextr 3]
+$blkxtr setExtrusionSolverAttribute StopAtHeight 1200
+$blkxtr setExtrusionSolverAttribute NormalVolumeSmoothing 0.009
 $sxtr run $xtr1
-$blkxtr setExtrusionSolverAttribute StopAtHeight 175
-$blkxtr setExtrusionSolverAttribute NormalVolumeSmoothing 0.02
-$sxtr run $xtr1
-$blkxtr setExtrusionSolverAttribute StopAtHeight 225
-$blkxtr setExtrusionSolverAttribute NormalVolumeSmoothing 0.022
-$sxtr run $xtr1
-$blkxtr setExtrusionSolverAttribute StopAtHeight 270
-$blkxtr setExtrusionSolverAttribute NormalMaximumStepSize 0.0
+$blkxtr setExtrusionSolverAttribute NormalMaximumStepSize [lindex $maxstpextr 4]
+$blkxtr setExtrusionSolverAttribute StopAtHeight 2400
 $blkxtr setExtrusionSolverAttribute NormalExplicitSmoothing 0.3
 $blkxtr setExtrusionSolverAttribute NormalImplicitSmoothing 0.9
-$blkxtr setExtrusionSolverAttribute NormalVolumeSmoothing 0.025
+$blkxtr setExtrusionSolverAttribute NormalVolumeSmoothing 0.02
+$sxtr run $xtr1
+$blkxtr setExtrusionSolverAttribute NormalMaximumStepSize [lindex $maxstpextr 5]
+$blkxtr setExtrusionSolverAttribute StopAtHeight 4000
+$blkxtr setExtrusionSolverAttribute NormalVolumeSmoothing 0.027
 $sxtr run $xtr1
 $sxtr end
 
@@ -218,8 +218,75 @@ for {set i 0} {$i < [llength $blkjoin]} {incr i} {
 
 set smthd [list $dom_blk3 $blk4 {*}$blkjoin]
 
+set connfar(1) []
+array set confar []
+
+lappend connfar(1) [[[lindex $blkjoin 0] getEdge 2] getConnector 1]
+lappend connfar(1) [[[lindex $blkjoin 0] getEdge 2] getConnector 2]
+lappend connfar(1) [[[lindex $blkjoin 0] getEdge 3] getConnector 1]
+lappend connfar(1) [[[lindex $blkjoin 0] getEdge 3] getConnector 2]
+
+set confar(1) [pw::Connector join [list [lindex $connfar(1) 0] [lindex $connfar(1) 1] [lindex $connfar(1) 2] [lindex $connfar(1) 3]]]
+
+lappend confarbc [lindex $confar(1) 0]
+lappend confarbc [lindex $confar(1) 1]
+
+lappend domfarbc [lindex $blkjoin 0]
+lappend domfarbc [lindex $blkjoin 0]
+
+set confar(2) [[[lindex $blkjoin 1] getEdge 2] getConnector 1]
+
+lappend confarbc [lindex $confar(2) 0]
+lappend domfarbc [lindex $blkjoin 1]
+
+set connfar(3) []
+
+lappend connfar(3) [[[lindex $blkjoin 2] getEdge 4] getConnector 1]
+lappend connfar(3) [[[lindex $blkjoin 2] getEdge 4] getConnector 2]
+
+set confar(3) [pw::Connector join [list [lindex $connfar(3) 0] [lindex $connfar(3) 1] ]]
+
+lappend confarbc [lindex $confar(3) 0]
+lappend domfarbc [lindex $blkjoin 2]
+
+set connfar(4) []
+
+lappend connfar(4) [[[lindex $blkjoin 3] getEdge 3] getConnector 1]
+lappend connfar(4) [[[lindex $blkjoin 3] getEdge 3] getConnector 2]
+
+set confar(4) [pw::Connector join [list [lindex $connfar(4) 0] [lindex $connfar(4) 1] ]]
+
+lappend confarbc [lindex $confar(4) 0]
+lappend domfarbc [lindex $blkjoin 3]
+
+set confar(5) [[[lindex $blkjoin 4] getEdge 2] getConnector 1]
+
+lappend confarbc [lindex $confar(5) 0]
+lappend domfarbc [lindex $blkjoin 4]
+
+set confar(6) [[[lindex $blkjoin 5] getEdge 2] getConnector 1]
+
+lappend confarbc [lindex $confar(6) 0]
+lappend domfarbc [lindex $blkjoin 5]
+
+set connfar(7) []
+
+lappend connfar(7) [[[lindex $blkjoin 6] getEdge 3] getConnector 1]
+lappend connfar(7) [[[lindex $blkjoin 6] getEdge 3] getConnector 2]
+lappend connfar(7) [[[lindex $blkjoin 6] getEdge 3] getConnector 3]
+
+set confar(7) [pw::Connector join [list [lindex $connfar(7) 0] [lindex $connfar(7) 1] [lindex $connfar(7) 2]]]
+
+lappend confarbc [lindex $confar(7) 0]
+lappend confarbc [[[lindex $blkjoin 6] getEdge 2] getConnector 1]
+lappend domfarbc [lindex $blkjoin 6]
+lappend domfarbc [lindex $blkjoin 6]
+
 #=====================================================SMOOTHER====================================
 
 source [file join $scriptDir "smoother.glf"]
 
+#=====================================================DOMAIN EXAMINE==============================
 
+$domexm examine
+set domexmv [$domexm getMinimum]

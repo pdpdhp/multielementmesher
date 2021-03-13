@@ -43,6 +43,6 @@ if {[string compare $global_smth YES]==0} {
 	$smth1 run $gsmthiter
 	$smth1 end
 
-	puts "Global Elliptic Solver: finished $gsmthiter iterations over [llength $smthd] structured domains!"
+	puts "GLOBAL ELLIPTIC SOLVER FINISHED $gsmthiter ITERATIONS OVER [llength $smthd] STRUCTURED DOMAINS."
 }
 

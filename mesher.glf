@@ -13,17 +13,23 @@ package require PWI_Glyph 3.18.3
 
 set scriptDir [file dirname [info script]]
 
+#MULTI-ELEMENT CONFIGURATION:
+#--------------------------------------------
 #multi-element airfoil selection 
 #Currently only 2-D CRM-HL wing section is supported!
 #DONT CHANGE THIS!
 set airfoil 1
 
+#GRID REFINEMENT LEVEL:
+#--------------------------------------------
 #Grid Levels vary from the first line of the grid_specification.txt to the last line as the coarsest level!
 #Default values from 6 to 0!
-set res_lev 6
+set res_lev 5
 
+#LOCAL AND GLOBAL SMOOTHERS:
+#--------------------------------------------
 # running structured elliptic solver over local domains only if global is switched off (e.g. near the configuration) (YES/NO)
-set local_smth YES
+set local_smth NO
 
 # number of iterations to run the local elliptic solver.
 # (>1000 Recommended)
@@ -34,8 +40,10 @@ set global_smth YES
 
 # number of iterations to run the global elliptic solver.
 # (>1000 Recommended)
-set gsmthiter 3000
+set gsmthiter 300
 
+#GROWTH RATIOS:
+#--------------------------------------------
 #General chrdwise growth ratio for node distribution over the wing, flap, and slat.
 set srfgr 1.15
 
@@ -45,6 +53,26 @@ set srfgrwl 1.1
 #chrdwise growth ratio for node distribution over the slat's upper surface.
 set srfgrfu 1.18
 
+#GRID DIMENSION:
+#--------------------------------------------
+# 2D DIMENSIONAL MESH. (YES/NO)
+set model_2D YES
+
+# QUASI 2D MESH. (YES/NO)
+set model_Q2D YES
+
+# span dimension for quasi 2d model in -Y direction
+set span 1.0
+
+# Fix number of points in spanwise direction? if YES, indicate number of points below. (YES/NO)
+set fixed_snodes YES
+
+# Number of points in spanwise direction. This parameter will be ignored
+# if you opted NO above and set automatically based on maximum spacing over wing, slat and flap.
+set span_dimension 3
+
+#CAE EXPORT:
+#--------------------------------------------
 #CAE solver selection. (Exp. SU2 or CGNS)
 set cae_solver CGNS
 
@@ -54,7 +82,7 @@ set cae_export YES
 #saves the native format (YES/NO)
 set save_native YES
 
-#Initial growth ratios for node distributions!
+#INITIAL GROWTH RATIOS FOR NODE DISTRIBUTION:
 #--------------------------------------------
 # region 1 con 1 growth ratio --> region 1 refers to the region on top of the slat!
 set r1c1gr 1.09
@@ -65,6 +93,8 @@ set r2c3gr 1.09
 # region 3 con 1 growth ratio --> region 3 refers to the region on top of the flap!
 set r3c1gr 1.09
 
+
+##=============================================================================================================
 #Importing Meshing Guidline generated based on the flow condition!
 set fp [open "$scriptDir/grid_specification.txt" r]
 set i 0
@@ -186,7 +216,7 @@ if {$res_lev==0} {
 			set stp_sg [lindex $extr 6]
 } else {
 
-puts "Please specify the right refinement level for your grid!"
+puts "PLEASE SELECT THE RIGHT REFINEMENT LEVEL BTW 0 (FINEST) AND 6 (COARSEST)."
 
 }
 
@@ -204,6 +234,8 @@ set a_domsp [$a_dom split -I [list [$wte getDimension] [expr [$wu getDimension]+
 			[expr [$wu getDimension]+[$wte getDimension]+[[lindex $con_alsp 1] getDimension]+[[lindex $conupsp 2] getDimension]+[[lindex $conupsp 1] getDimension]-4]\
 				[expr [$wu getDimension]+[$wte getDimension]+[[lindex $con_alsp 1] getDimension]+[[lindex $conupsp 2] getDimension]+\
 					[[lindex $conupsp 1] getDimension]+[[lindex $conupsp 0] getDimension]-5]]]
+
+set domwingbc [list [lindex $a_domsp 0] [lindex $a_domsp 1] [lindex $a_domsp 2] [lindex $a_domsp 3] [lindex $a_domsp 4] [lindex $a_domsp 5]]
 
 set s_domsp [$s_dom split -I [list [$ste getDimension] [expr [$ste getDimension]+[$su getDimension]+[$sle getDimension]-2]\
 						 [expr [$ste getDimension]+[$su getDimension]+[$sle getDimension]+[$suedg getDimension]-3]\
@@ -228,6 +260,8 @@ lappend bldoms [lindex $s_domsp 3]
 $domexm addEntity [lindex $s_domsp 4]
 lappend ncells [[lindex $s_domsp 4] getCellCount]
 lappend bldoms [lindex $s_domsp 4]
+
+set domslatbc [list [lindex $s_domsp 0] [lindex $s_domsp 4] [lindex $s_domsp 3] [lindex $s_domsp 2] [lindex $s_domsp 1]]
 
 set f_domsp [$f_dom split -I [list [$fte getDimension] [expr [$fte getDimension]+[[lindex $con_fusp 1] getDimension]-1]\
 	[expr [$fte getDimension]+[[lindex $con_fusp 0] getDimension]+[[lindex $con_fusp 1] getDimension] - 2]\
@@ -259,6 +293,8 @@ $domexm addEntity [lindex $f_domsp 5]
 lappend ncells [[lindex $f_domsp 5] getCellCount]
 lappend bldoms [lindex $f_domsp 5]
 
+set domflapbc [list [lindex $f_domsp 0] [lindex $f_domsp 1] [lindex $f_domsp 2] [lindex $f_domsp 3] [lindex $f_domsp 4] [lindex $f_domsp 5]]
+
 set wte1cs [[[lindex $a_domsp 0] getEdge 2] getConnector 1]
 set wte2cs $wexcon
 set wucs [[[lindex $a_domsp 1] getEdge 2] getConnector 1]
@@ -269,8 +305,8 @@ set stulcs [[[lindex $s_domsp 2] getEdge 2] getConnector 1]
 set ste1cs [[[lindex $s_domsp 0] getEdge 4] getConnector 1]
 set ste2cs [[[lindex $s_domsp 0] getEdge 2] getConnector 1]
 
-set fte2cs [[[lindex $f_domsp 0] getEdge 2] getConnector 1]
-set fte1cs [[[lindex $f_domsp 0] getEdge 4] getConnector 1]
+set fte2cs [[[lindex $f_domsp 1] getEdge 2] getConnector 1]
+set fte1cs [[[lindex $f_domsp 5] getEdge 4] getConnector 1]
 set ftlu1cs [[[lindex $f_domsp 1] getEdge 2] getConnector 1]
 set ftlu2cs [[[lindex $f_domsp 2] getEdge 2] getConnector 1]
 
@@ -477,11 +513,17 @@ $r3v3endm examine
 set r3v3m [$r3v3endm getValue $wc [expr [$wc getDimension]-1]]
 
 #=======================================================Spliting Tails==============================
+set plow1 {0.55783684 -0.57192536 0.0}
+set plow2 {0.57828053 -0.57796003 2.7755576e-17}
+set plow3 {0.89423268 -0.66407866 0.0}
 
-set conl_tail [[lindex $conlowsp 1] split [list [[lindex $conlowsp 1] getParameter -arc 0.0010541302] [[lindex $conlowsp 1] getParameter -arc 0.0010964581]\
-												 [[lindex $conlowsp 1] getParameter -arc 0.0017467905]]]
+set pup1 {0.87841013 0.30573454 -2.7755576e-17}
+set pup2 {1.1371937 0.32232921 -2.7755576e-17}
 
-set conu_tail [[lindex $con_consp 0] split [list [[lindex $con_consp 0] getParameter -arc 0.99772865] [[lindex $con_consp 0] getParameter -arc 0.99721115]]]
+set conl_tail [[lindex $conlowsp 1] split [list [[lindex $conlowsp 1] getParameter -closest $plow1] [[lindex $conlowsp 1] getParameter -closest $plow2]\
+												 [[lindex $conlowsp 1] getParameter -closest $plow3]]]
+
+set conu_tail [[lindex $con_consp 0] split [list [[lindex $con_consp 0] getParameter -closest $pup1] [[lindex $con_consp 0] getParameter -closest $pup2]]]
 
 set reg2_seg5 [pw::SegmentSpline create]
 $reg2_seg5 addPoint [[[lindex $con_flsp 1] getNode End] getXYZ]
@@ -531,7 +573,7 @@ set laySpcEnd $covspcv
 set maxedgeln [pw::Examine create ConnectorEdgeLength]
 $maxedgeln addEntity [lindex $con_flapsp 0]
 $maxedgeln examine
-set midSpc [expr [$maxedgeln getMaximum]*0.5]
+set midSpc [expr [$maxedgeln getAverage]*0.5]
 set laySpcGR $r3c1gr
 
 for {set i 0} {$laySpcBegin <= $midSpc} {incr i} {
@@ -605,7 +647,6 @@ $r2c6seg setBeginSpacing 0
 $r2c6seg setEndSpacing 0
 $r2c6seg setVariable [[[lindex $reg2_con6sp 0] getDistribution 1] getVariable]
 [lindex $reg2_con6sp 0] setDistribution -lockEnds 1 $r2c6seg
-[[lindex $reg2_con6sp 0] getDistribution 1] setBeginSpacing $r3v3s
 
 set r2c6sp0 [pw::Examine create ConnectorEdgeLength]
 $r2c6sp0 addEntity [lindex $reg2_con6sp 0]
@@ -661,16 +702,16 @@ set end_consp [$end_con split -I [list [expr int([$reg1_con1 getDimension] + [$s
 							[[lindex $con_flsp 0] getDimension] + [[lindex $con_fusp 1] getDimension] + [$fte getDimension]-7)]]]
 
 $conwu1_seg addPoint $ptAwu1
-$conwu1_seg addPoint {1.15790403901117 -0.0994095398277397 -0}
-$conwu1_seg addPoint {1.89488504626128 -0.227310186528001 -0}
+$conwu1_seg addPoint {1.15790403901117 -0.09940953982774 0}
+$conwu1_seg addPoint {1.89488504626128 -0.227310186528001 0}
 $conwu1_seg addPoint [[[lindex $end_consp 0] getNode End] getXYZ]
 $conwu1_seg setSlope Free
-$conwu1_seg setSlopeOut 1 {0.15429875738948096 0.0018578460287982448 0}
-$conwu1_seg setSlopeIn 2 {-0.099726411117059932 0.044547903199580803 0}
-$conwu1_seg setSlopeOut 2 {0.099726411117060154 -0.044547903199580297 0}
-$conwu1_seg setSlopeIn 3 {-0.46495892332791011 0.083421935345691006 0}
-$conwu1_seg setSlopeOut 3 {0.46495892332790989 -0.083421935345690978 0}
-$conwu1_seg setSlopeIn 4 {-194.67646916251704 5.1227384904501996 0}
+$conwu1_seg setSlopeOut 1 {0.096308946593529843 0.0016008999472437863 0}
+$conwu1_seg setSlopeIn 2 {-0.15508690685936988 0.068900490314906998 0}
+$conwu1_seg setSlopeOut 2 {0.1550869068593701 -0.068900490314906998 0}
+$conwu1_seg setSlopeIn 3 {-0.50883952130049015 0.043478209434036991 0}
+$conwu1_seg setSlopeOut 3 {0.50883952130048993 -0.043478209434037018 0}
+$conwu1_seg setSlopeIn 4 {-7003.6871790195137 6.9944648029272525 0}
 set conwu1_con [pw::Connector create]
 $conwu1_con addSegment $conwu1_seg
 
@@ -678,25 +719,25 @@ $confu1_seg addPoint $ptAfu1
 $confu1_seg addPoint {1.66609550379898 -0.425721309513789 0.0}
 $confu1_seg addPoint [[[lindex $end_consp 1] getNode End] getXYZ]
 $confu1_seg setSlope Free
-$confu1_seg setSlopeOut 1 {0.085091985096509504 -0.088833605390293113 0}
-$confu1_seg setSlopeIn 2 {-0.33503507526840992 0.082699480140915993 0}
-$confu1_seg setSlopeOut 2 {0.33503507526840992 -0.082699480140916048 0}
-$confu1_seg setSlopeIn 3 {-367.44728608302 15.5111315423481 0}
+$confu1_seg setSlopeOut 1 {0.057366242422751457 -0.052835705339539074 0}
+$confu1_seg setSlopeIn 2 {-0.31830905400692 0.064073167703865008 0}
+$confu1_seg setSlopeOut 2 {0.31830905400692 -0.064073167703865008 0}
+$confu1_seg setSlopeIn 3 {-7003.8797243488943 15.791674839111575 0}
 set confu1_con [pw::Connector create]
 $confu1_con addSegment $confu1_seg
 
 $confu2_seg addPoint $ptAfu2
-$confu2_seg addPoint {1.66446510647908 -0.437999500724808 0.0}
+$confu2_seg addPoint {1.67060124202279 -0.48311020943268 0.000171277868638}
 $confu2_seg addPoint [[[lindex $end_consp 2] getNode End] getXYZ]
 $confu2_seg setSlope Free
-$confu2_seg setSlopeOut 1 {0.015561614666341539 -0.042080669328739384 0}
-$confu2_seg setSlopeIn 2 {-0.39841359430945 0.099691528776574001 0}
-$confu2_seg setSlopeOut 2 {0.39841359430944978 -0.099691528776574057 0}
-$confu2_seg setSlopeIn 3 {-392.15651066073701 20.658075131063708 0}
+$confu2_seg setSlopeOut 1 {0.042512205918592949 -0.083968361186473411 5.7092622879333298e-05}
+$confu2_seg setSlopeIn 2 {-0.28536755074811015 0.070930598778093989 -5.7092622879332993e-05}
+$confu2_seg setSlopeOut 2 {0.28536755074810993 -0.070930598778094045 5.7092622879333007e-05}
+$confu2_seg setSlopeIn 3 {-6998.7799151064346 18.866814377263314 5.7092622879333298e-05}
 set confu2_con [pw::Connector create]
 $confu2_con addSegment $confu2_seg
 
-set wigu_tail [$conwu1_con split [list [$conwu1_con getParameter -arc 0.0006]]]
+set wigu_tail [$conwu1_con split [list [$conwu1_con getParameter -closest {1.1280577 -0.084106942 8.6736174e-19}]]]
 
 [lindex $conu_tail 2] setDimension [$wu getDimension]
 set tail1seg [pw::DistributionGeneral create [list $wu]]
@@ -750,11 +791,13 @@ $tt0 addEntity [lindex $conu_tail 1]
 $tt0 examine
 set tt0v [$tt0 getValue [lindex $conu_tail 1] 1]
 
+set maxmidspc [list 1875 1875 1875 3750 7500 15000 30000]
+
 set tt1 [pw::DistributionGrowth create]
 $tt1 setBeginSpacing $tt0v
 set laySpcBegin $tt0v
-set midSpc [expr [$tt0 getMaximum]*2000]
-set laySpcGR 1.05
+set midSpc [expr [$tt0 getMaximum]*[lindex $maxmidspc $res_lev]]
+set laySpcGR 1.1
 
 for {set i 0} {$laySpcBegin <= $midSpc} {incr i} {
 	set laySpcBegin [expr $laySpcBegin*$laySpcGR]
@@ -771,12 +814,12 @@ $tt1 setBeginRate $laySpcGR
 set tt00 [pw::Examine create ConnectorEdgeLength]
 $tt00 addEntity $fte1cs
 $tt00 examine
-set tt00v [$tt00 getMaximum]
+set tt00v [$tt00 getValue $fte1cs [expr [$fte1cs getDimension]-1]]
 
 set tt000 [pw::Examine create ConnectorEdgeLength]
 $tt000 addEntity $fte2cs
 $tt000 examine
-set tt000v [$tt000 getMaximum]
+set tt000v [$tt000 getValue $fte2cs [expr [$fte2cs getDimension]-1]]
 
 #tail 2
 [lindex $wigu_tail 1] setDimension [[lindex $conu_tail 0] getDimension]
@@ -791,12 +834,8 @@ $tail7seg setVariable [[[lindex $wigu_tail 1] getDistribution 1] getVariable]
 
 #tail 3
 $confu1_con setDimension [[lindex $wigu_tail 1] getDimension]
-set tail8seg [pw::DistributionGeneral create [list [lindex $wigu_tail 1]]]
-$tail8seg setBeginSpacing 0
-$tail8seg setEndSpacing 0
-$tail8seg setVariable [[$confu1_con getDistribution 1] getVariable]
-$confu1_con setDistribution -lockEnds 1 $tail8seg
-[$confu1_con getDistribution 1] setBeginSpacing $tt00v
+$confu1_con setDistribution 1 [[[lindex $wigu_tail 1] getDistribution 1] copy]
+[$confu1_con getDistribution 1] setBeginSpacing $tt000v
 
 #tail 4
 $confu2_con setDimension [$confu1_con getDimension]
@@ -804,8 +843,9 @@ set tail10seg [pw::DistributionGeneral create [list $confu1_con]]
 $tail10seg setBeginSpacing 0
 $tail10seg setEndSpacing 0
 $tail10seg setVariable [[$confu2_con getDistribution 1] getVariable]
-$confu2_con setDistribution -lockEnds 1 $tail10seg
-[$confu2_con getDistribution 1] setBeginSpacing $tt000v
+$confu2_con setDistribution 1 $tail10seg
+[$confu2_con getDistribution 1] setBeginSpacing $tt00v
+
 
 #tail 5
 [lindex $conl_tail 3] setDimension [$confu2_con getDimension]
@@ -927,7 +967,7 @@ set segmidcon [pw::SegmentSpline create]
 $segmidcon addPoint [[[lindex $conupsp 0] getNode End] getXYZ]
 $segmidcon addPoint [[[lindex $conl_tail 0] getNode End] getXYZ]
 $segmidcon setPoint 2 {0.738223367226841 -0.0416443542487878 -0}
-$segmidcon addPoint {0.5578368356505192 -0.5719253582914829 0.0}
+$segmidcon addPoint [[[lindex $conl_tail 0] getNode End] getXYZ]
 $segmidcon setSlope Free
 $segmidcon setSlopeOut 1 {0.0026610095105451537 -0.0030644481871643127 0}
 $segmidcon setSlopeIn 2 {0.0011803843908849698 0.018251427194276498 0}
@@ -1039,6 +1079,15 @@ $slatdown examine
 set slatdownv [$slatdown getValue [lindex $conl_tail 0] 1]
 
 [[lindex $conlowspsp 1] getDistribution 1] setEndSpacing $slatdownv
+
+set bwtfwspc [pw::Examine create ConnectorEdgeLength]
+$bwtfwspc addEntity [[[lindex $f_domsp 3] getEdge 2] getConnector 1]
+$bwtfwspc examine
+set bwtfwspcv [$bwtfwspc getValue [[[lindex $f_domsp 3] getEdge 2] getConnector 1] [expr [[[[lindex $f_domsp 3] getEdge 2] getConnector 1] getDimension]-1]]
+
+[[lindex $reg2_con5sp 0] getDistribution 1] setBeginSpacing $bwtfwspcv
+
+[[lindex $reg2_con6sp 0] getDistribution 1] setBeginSpacing $bwtfwspcv
 
 #=====================================================TAIL BLOCKs===================================
 # 5. OVER WING
@@ -1158,6 +1207,9 @@ lappend adjdoms $blk4
 lappend adjdoms $blk4
 lappend adjbcs 2
 lappend adjbcs 4
+
+lappend confarbc [[$blk4 getEdge 3] getConnector 1]
+lappend domfarbc $blk4
 
 # 9. SLAT LE DOWN
 set edge31 [pw::Edge create]
@@ -1329,7 +1381,7 @@ if {[string compare $local_smth YES]==0 && [string compare $global_smth NO]==0} 
 	
 	$dsolve run $lsmthiter
 	$dsolve end
-	puts "Local Elliptic Solver: finished $lsmthiter iterations over [llength $doms] structured domains!"
+	puts "LOCAL ELLIPTIC SOLVER FINISHED $lsmthiter ITERATIONS OVER [llength $doms] STRUCTURED DOMAINS"
 }
 
 #=====================================================OUTTER DOMAIN EXTRUSION====================================
@@ -1338,103 +1390,574 @@ source [file join $scriptDir "extrusion.glf"]
 
 #=================================================CAE Export--=====================================================
 
-$domexm examine
-set domexmv [$domexm getMinimum]
+set fexmod [open "$scriptDir/output.txt" w]
+
+# gathering all domains
+set alldoms [list {*}$bldoms {*}$smthd]
+
+# creating general boundary conditions
+set bcslat [pw::BoundaryCondition create]
+	$bcslat setName slat
+set bcwing [pw::BoundaryCondition create]
+	$bcwing setName wing
+set bcflap [pw::BoundaryCondition create]
+	$bcflap setName flap
+set bcfar [pw::BoundaryCondition create]
+	$bcfar setName farfield
+
+if {[string compare $model_2D YES]==0} {
+	
+	#assigning BCs
+	foreach con $conslatbc dom $domslatbc {
+		$bcslat apply [list [list $dom $con]]
+	}
+	
+	foreach con $conwingbc dom $domwingbc {
+		$bcwing apply [list [list $dom $con]]
+	}
+	
+	foreach con $conflapbc dom $domflapbc {
+		$bcflap apply [list [list $dom $con]]
+	}
+	
+	foreach con $confarbc dom $domfarbc {
+		$bcfar apply [list [list $dom $con]]
+	}
+	
+	set ncell [expr [join $ncells +]]
+	set gorder [string length $ncell]
+
+	if {$gorder<7} {
+		set gridID "[string range $ncell 0 2]k"
+	} elseif {$gorder>=7 && $gorder<10} {
+		set gridID "[string range [expr $ncell/1000000] 0 2]m[string range [expr int($ncell%1000000)] 0 2]k"
+	}
+
+	append gridname lev $res_lev "_" $gridID
+	
+	puts $fexmod [string repeat - 50]
+	puts $fexmod "2D MULTIBLOCK STRUCTURED GRID | 2D CRM HIGH-LIFT CONFIG | GRID LEVEL $res_lev:"
+	puts $fexmod [string repeat - 50]
+	puts $fexmod "total domains: [llength $ncells]"
+	puts $fexmod "total cells: $ncell cells"
+	puts $fexmod "min area: [format "%*e" 5 $domexmv]"
+	
+	if {[string compare $cae_export YES]==0} {
+		# creating export directory
+		set exportDir [file join $scriptDir grids/2d]
+
+		file mkdir $exportDir
+		
+		puts $fexmod [string repeat - 50]
+		# CAE specificity in the output file!
+		puts $fexmod "Current solver: [set curSolver [pw::Application getCAESolver]]"
+
+		set validExts [pw::Application getCAESolverAttribute FileExtensions]
+		puts $fexmod "Valid file extensions: '$validExts'"
+
+		set defExt [lindex $validExts 0]
+
+		set caex [pw::Application begin CaeExport $alldoms]
+
+		set destType [pw::Application getCAESolverAttribute FileDestination]
+		switch $destType {
+			Filename { set dest [file join $exportDir "$gridname.$defExt"] }
+			Folder   { set dest $exportDir }
+			default  { return -code error "Unexpected FileDestination value" }
+		}
+		puts $fexmod "Exporting to $destType: '$dest'"
+		puts $fexmod [string repeat - 50]
+
+		# Initialize the CaeExport mode
+		set status abort  ;
+		if { ![$caex initialize $dest] } {
+			puts $fexmod {$caex initialize failed!}
+		} else {
+			set dashes [string repeat - 50]
+			if { ![catch {$caex setAttribute FilePrecision Double}] } {
+				puts $fexmod "setAttribute FilePrecision Double"
+			}
+
+			if { ![$caex verify] } {
+				puts $fexmod {$caex verify failed!}
+			} elseif { ![$caex canWrite] } {
+				puts $fexmod {$caex canWrite failed!}
+			} elseif { ![$caex write] } {
+				puts $fexmod {$caex write failed!}
+			} elseif { 0 != [llength [set feCnts [$caex getForeignEntityCounts]]] } {
+			# print entity counts reported by the exporter
+			set fmt {   %-22.22s | %6.6s |}
+			puts $fexmod "Number of grid entities exported:"
+			puts $fexmod [format $fmt {Entity Type} Count]
+			puts $fexmod [format $fmt $dashes $dashes]
+			dict for {key val} $feCnts {
+				puts $fexmod [format $fmt $key $val]
+			}
+			set status end ;# all is okay now
+			}
+		}
+
+		# Display any errors/warnings
+		set errCnt [$caex getErrorCount]
+		for {set ndx 1} {$ndx <= $errCnt} {incr ndx} {
+			puts $fexmod "[$caex getErrorCode $ndx]: '[$caex getErrorInformation $ndx]'"
+		}
+		# abort/end the CaeExport mode
+		$caex $status
+	}
+
+	if {[string compare $save_native YES]==0} {
+		set exportDir [file join $scriptDir grids/2d]
+		file mkdir $exportDir
+		pw::Application save "$exportDir/$gridname.pw"
+	}
+	
+	puts "2D GRID GENERATED FOR LEVEL $res_lev."
+
+}
+
+if {[string compare $model_Q2D YES]==0} {
+	pw::Application setCAESolver $cae_solver 3
+	
+	#grid tolerance
+	pw::Grid setNodeTolerance 1.0e-7
+	pw::Grid setConnectorTolerance 1.0e-7
+	pw::Grid setGridPointTolerance 1.0e-7
+	
+	set fstr [pw::FaceStructured createFromDomains $alldoms]
+	
+	set spanSpc [pw::Examine create ConnectorEdgeLength]
+	$spanSpc addEntity $wu
+	$spanSpc addEntity $su
+	$spanSpc addEntity [lindex $con_fusp 0]
+	$spanSpc examine
+	set spanSpcv [$spanSpc getMaximum]
+	set trnstp [expr int($span/$spanSpcv)]
+	
+	for {set i 0} {$i<[llength $fstr]} {incr i} {
+		lappend blk [pw::BlockStructured create]
+		[lindex $blk $i] addFace [lindex $fstr $i]
+	}
+
+	set domtrn [pw::Application begin ExtrusionSolver $blk]
+	
+	foreach bl $blk {
+		$bl setExtrusionSolverAttribute Mode Translate
+		$bl setExtrusionSolverAttribute TranslateDirection {0 0 1}
+		$bl setExtrusionSolverAttribute TranslateDistance $span
+	}
+	
+	if {[string compare $fixed_snodes NO]==0} {
+		$domtrn run $trnstp
+		$domtrn end
+	} else {
+		$domtrn run [expr $span_dimension-1]
+		$domtrn end
+	}
+	
+	pw::Entity transform [pwu::Transform rotation -anchor {0 0 0} {1 0 0} 90] [pw::Grid getAll]
+	pw::Display hideAllLayers
+	
+	puts "QUASI 2D GRID GENERATED FOR LEVEL $res_lev."
+	
+	#assigning BCs
+	#CAE Boundary Condition
+	set domslatqbc []
+	set blkslatqbc []
+	set domwingqbc []
+	set blkwingqbc []
+	set domflapqbc []
+	set blkflapqbc []
+	set domrightqbc []
+	set blkrightqbc []
+	set domleftqbc []
+	set blkleftqbc []
+	
+	array set dommwingqbc []
+	array set dommrightqbc []
+	array set dommleftqbc []
+	array set dommfarqbc []
+	set k 1
+	
+	for {set k 1} {$k<=[llength $blk]} {incr k} {
+		set dommrightqbc($k) []
+		set dommleftqbc($k) []
+		set dommwingqbc($k) []
+		set dommslatqbc($k) []
+		set dommflapqbc($k) []
+		set dommfarqbc($k) []
+	}
+	
+	# finding proper domains and blocks corresponding to BCs
+	#block 0
+	set dommwingqbc(1) [[[lindex $blk 0] getFace 3] getDomains]
+	set dommrightqbc(1) [[[lindex $blk 0] getFace 6] getDomains]
+	set dommleftqbc(1) [[[lindex $blk 0] getFace 1] getDomains]
+	
+	foreach ent $dommwingqbc(1) {
+		lappend domwingqbc $ent
+		lappend blkwingqbc [lindex $blk 0]
+	}
+	
+	foreach ent $dommrightqbc(1) {
+		lappend domrightqbc $ent
+		lappend blkrightqbc [lindex $blk 0]
+	}
+	
+	foreach ent $dommleftqbc(1) {
+		lappend domleftqbc $ent
+		lappend blkleftqbc [lindex $blk 0]
+	}
+	
+	#block 1
+	set dommrightqbc(2) [[[lindex $blk 1] getFace 6] getDomains]
+	set dommleftqbc(2) [[[lindex $blk 1] getFace 1] getDomains]
+	set dommfarqbc(1) [[[lindex $blk 1] getFace 2] getDomains]
+	set dommfarqbc(2) [[[lindex $blk 1] getFace 5] getDomains]
+	
+	foreach ent $dommrightqbc(2) {
+		lappend domrightqbc $ent
+		lappend blkrightqbc [lindex $blk 1]
+	}
+	
+	foreach ent $dommleftqbc(2) {
+		lappend domleftqbc $ent
+		lappend blkleftqbc [lindex $blk 1]
+	}
+	
+	foreach ent $dommfarqbc(1) {
+		lappend domfarqbc $ent
+		lappend blkfarqbc [lindex $blk 1]
+	}
+	
+	foreach ent $dommfarqbc(2) {
+		lappend domfarqbc $ent
+		lappend blkfarqbc [lindex $blk 1]
+	}
+	
+	#block 2
+	set dommrightqbc(3) [[[lindex $blk 2] getFace 6] getDomains]
+	set dommleftqbc(3) [[[lindex $blk 2] getFace 1] getDomains]
+	set dommslatqbc(1) [[[lindex $blk 2] getFace 3] getDomains]
+	
+	foreach ent $dommrightqbc(3) {
+		lappend domrightqbc $ent
+		lappend blkrightqbc [lindex $blk 2]
+	}
+	
+	foreach ent $dommleftqbc(3) {
+		lappend domleftqbc $ent
+		lappend blkleftqbc [lindex $blk 2]
+	}
+	
+	foreach ent $dommslatqbc(1) {
+		lappend domslatqbc $ent
+		lappend blkslatqbc [lindex $blk 2]
+	}
+	
+	#block 3
+	set dommrightqbc(4) [[[lindex $blk 3] getFace 6] getDomains]
+	set dommleftqbc(4) [[[lindex $blk 3] getFace 1] getDomains]
+	set dommfarqbc(3) [[[lindex $blk 3] getFace 2] getDomains]
+	
+	foreach ent $dommrightqbc(4) {
+		lappend domrightqbc $ent
+		lappend blkrightqbc [lindex $blk 3]
+	}
+	
+	foreach ent $dommleftqbc(4) {
+		lappend domleftqbc $ent
+		lappend blkleftqbc [lindex $blk 3]
+	}
+	
+	foreach ent $dommfarqbc(3) {
+		lappend domfarqbc $ent
+		lappend blkfarqbc [lindex $blk 3]
+	}
+	
+	#block 4
+	set dommrightqbc(5) [[[lindex $blk 4] getFace 6] getDomains]
+	set dommleftqbc(5) [[[lindex $blk 4] getFace 1] getDomains]
+	set dommslatqbc(2) [[[lindex $blk 4] getFace 3] getDomains]
+	
+	foreach ent $dommrightqbc(5) {
+		lappend domrightqbc $ent
+		lappend blkrightqbc [lindex $blk 4]
+	}
+	
+	foreach ent $dommleftqbc(5) {
+		lappend domleftqbc $ent
+		lappend blkleftqbc [lindex $blk 4]
+	}
+	
+	foreach ent $dommslatqbc(2) {
+		lappend domslatqbc $ent
+		lappend blkslatqbc [lindex $blk 4]
+	}
+	
+	#block 5
+	set dommrightqbc(6) [[[lindex $blk 5] getFace 6] getDomains]
+	set dommleftqbc(6) [[[lindex $blk 5] getFace 1] getDomains]
+	set dommfarqbc(4) [[[lindex $blk 5] getFace 5] getDomains]
+	
+	foreach ent $dommrightqbc(6) {
+		lappend domrightqbc $ent
+		lappend blkrightqbc [lindex $blk 5]
+	}
+	
+	foreach ent $dommleftqbc(6) {
+		lappend domleftqbc $ent
+		lappend blkleftqbc [lindex $blk 5]
+	}
+	
+	foreach ent $dommfarqbc(4) {
+		lappend domfarqbc $ent
+		lappend blkfarqbc [lindex $blk 5]
+	}
+	
+	#block 6
+	set dommrightqbc(7) [[[lindex $blk 6] getFace 6] getDomains]
+	set dommleftqbc(7) [[[lindex $blk 6] getFace 1] getDomains]
+	set dommflapqbc(1) [[[lindex $blk 6] getFace 3] getDomains]
+	
+	foreach ent $dommrightqbc(7) {
+		lappend domrightqbc $ent
+		lappend blkrightqbc [lindex $blk 6]
+	}
+	
+	foreach ent $dommleftqbc(7) {
+		lappend domleftqbc $ent
+		lappend blkleftqbc [lindex $blk 6]
+	}
+	
+	foreach ent $dommflapqbc(1) {
+		lappend domflapqbc $ent
+		lappend blkflapqbc [lindex $blk 6]
+	}
+	
+	#block 7
+	set dommrightqbc(8) [[[lindex $blk 7] getFace 6] getDomains]
+	set dommleftqbc(8) [[[lindex $blk 7] getFace 1] getDomains]
+	set dommfarqbc(5) [[[lindex $blk 7] getFace 4] getDomains]
+	
+	foreach ent $dommrightqbc(8) {
+		lappend domrightqbc $ent
+		lappend blkrightqbc [lindex $blk 7]
+	}
+	
+	foreach ent $dommleftqbc(8) {
+		lappend domleftqbc $ent
+		lappend blkleftqbc [lindex $blk 7]
+	}
+	
+	foreach ent $dommfarqbc(5) {
+		lappend domfarqbc $ent
+		lappend blkfarqbc [lindex $blk 7]
+	}
+	
+	#block 8
+	set dommrightqbc(9) [[[lindex $blk 8] getFace 6] getDomains]
+	set dommleftqbc(9) [[[lindex $blk 8] getFace 1] getDomains]
+	set dommfarqbc(6) [[[lindex $blk 8] getFace 5] getDomains]
+	
+	
+	foreach ent $dommrightqbc(9) {
+		lappend domrightqbc $ent
+		lappend blkrightqbc [lindex $blk 8]
+	}
+	
+	foreach ent $dommleftqbc(9) {
+		lappend domleftqbc $ent
+		lappend blkleftqbc [lindex $blk 8]
+	}
+	
+	foreach ent $dommfarqbc(6) {
+		lappend domfarqbc $ent
+		lappend blkfarqbc [lindex $blk 8]
+	}
+	
+	
+	#blcok 9
+	set dommrightqbc(10) [[[lindex $blk 9] getFace 6] getDomains]
+	set dommleftqbc(10) [[[lindex $blk 9] getFace 1] getDomains]
+	set dommfarqbc(7) [[[lindex $blk 9] getFace 4] getDomains]
+	
+	foreach ent $dommrightqbc(10) {
+		lappend domrightqbc $ent
+		lappend blkrightqbc [lindex $blk 9]
+	}
+	
+	foreach ent $dommleftqbc(10) {
+		lappend domleftqbc $ent
+		lappend blkleftqbc [lindex $blk 9]
+	}
+	
+	foreach ent $dommfarqbc(7) {
+		lappend domfarqbc $ent
+		lappend blkfarqbc [lindex $blk 9]
+	}
+	
+	#block 10
+	set dommrightqbc(11) [[[lindex $blk 10] getFace 6] getDomains]
+	set dommleftqbc(11) [[[lindex $blk 10] getFace 1] getDomains]
+	set dommfarqbc(8) [[[lindex $blk 10] getFace 5] getDomains]
+	set dommfarqbc(9) [[[lindex $blk 10] getFace 2] getDomains]
+	
+	foreach ent $dommrightqbc(11) {
+		lappend domrightqbc $ent
+		lappend blkrightqbc [lindex $blk 10]
+	}
+	
+	foreach ent $dommleftqbc(11) {
+		lappend domleftqbc $ent
+		lappend blkleftqbc [lindex $blk 10]
+	}
+	
+	foreach ent $dommfarqbc(8) {
+		lappend domfarqbc $ent
+		lappend blkfarqbc [lindex $blk 10]
+	}
+
+	foreach ent $dommfarqbc(9) {
+		lappend domfarqbc $ent
+		lappend blkfarqbc [lindex $blk 10]
+	}
+	
+	#assigning domains to BCs
+	foreach domain $domslatqbc block $blkslatqbc {
+		$bcslat apply [list [list $block $domain]]
+	}
+
+	foreach domain $domwingqbc block $blkwingqbc {
+		$bcwing apply [list [list $block $domain]]
+	}
+	
+	foreach domain $domflapqbc block $blkflapqbc {
+		$bcflap apply [list [list $block $domain]]
+	}
+
+	set bcright [pw::BoundaryCondition create]
+	$bcright setName plane_right
+	foreach domain $domrightqbc block $blkrightqbc {
+		$bcright apply [list [list $block $domain]]
+	}
+
+	set bcleft [pw::BoundaryCondition create]
+	$bcleft setName plane_left
+	foreach domain $domleftqbc block $blkleftqbc {
+		$bcleft apply [list [list $block $domain]]
+	}
+	
+	foreach domain $domfarqbc block $blkfarqbc {
+		$bcfar apply [list [list $block $domain]]
+	}
+	
+	#examine
+	set blkexm [pw::Examine create BlockVolume]
+	$blkexm addEntity $blk
+	$blkexm examine
+	set blkexmv [$blkexm getMinimum]
+	
+	foreach bl $blk {
+		lappend blkncells [$bl getCellCount]
+	}
+	
+	set blkncell [expr [join $blkncells +]]
+	set blkorder [string length $blkncell]
+
+	if {$blkorder<7} {
+		set blkID "[string range $blkncell 0 2]k"
+	} elseif {$blkorder>=7 && $blkorder<10} {
+		set blkID "[string range [expr $blkncell/1000000] 0 2]m[string range [expr int($blkncell%1000000)] 0 2]k"
+	}
+
+	append 3dgridname lev $res_lev "_" $blkID
+	
+	puts $fexmod [string repeat - 50]
+	puts $fexmod "QUASI 2D MULTIBLOCK STRUCTURED GRID | 2D CRM HIGH-LIFT CONFIG | GRID LEVEL $res_lev:"
+	puts $fexmod [string repeat - 50]
+	puts $fexmod "total blocks: [llength $blkncells]"
+	puts $fexmod "total cells: $blkncell cells"
+	puts $fexmod "min volume: [format "%*e" 5 $blkexmv]"
+	
+	if {[string compare $cae_export YES]==0} {
+		# creating export directory
+		set exportDir [file join $scriptDir grids/2dquasi]
+
+		file mkdir $exportDir
+		
+		puts $fexmod [string repeat - 50]
+		# CAE specificity in the output file!
+		puts $fexmod "Current solver: [set curSolver [pw::Application getCAESolver]]"
+
+		set validExts [pw::Application getCAESolverAttribute FileExtensions]
+		puts $fexmod "Valid file extensions: '$validExts'"
+
+		set defExt [lindex $validExts 0]
+
+		set caex [pw::Application begin CaeExport $blk]
+
+		set destType [pw::Application getCAESolverAttribute FileDestination]
+		switch $destType {
+			Filename { set dest [file join $exportDir "$3dgridname.$defExt"] }
+			Folder   { set dest $exportDir }
+			default  { return -code error "Unexpected FileDestination value" }
+		}
+		puts $fexmod "Exporting to $destType: '$dest'"
+		puts $fexmod [string repeat - 50]
+
+		# Initialize the CaeExport mode
+		set status abort  ;
+		if { ![$caex initialize $dest] } {
+			puts $fexmod {$caex initialize failed!}
+		} else {
+			set dashes [string repeat - 50]
+			if { ![catch {$caex setAttribute FilePrecision Double}] } {
+				puts $fexmod "setAttribute FilePrecision Double"
+			}
+
+			if { ![$caex verify] } {
+				puts $fexmod {$caex verify failed!}
+			} elseif { ![$caex canWrite] } {
+				puts $fexmod {$caex canWrite failed!}
+			} elseif { ![$caex write] } {
+				puts $fexmod {$caex write failed!}
+			} elseif { 0 != [llength [set feCnts [$caex getForeignEntityCounts]]] } {
+			# print entity counts reported by the exporter
+			set fmt {   %-22.22s | %6.6s |}
+			puts $fexmod "Number of grid entities exported:"
+			puts $fexmod [format $fmt {Entity Type} Count]
+			puts $fexmod [format $fmt $dashes $dashes]
+			dict for {key val} $feCnts {
+				puts $fexmod [format $fmt $key $val]
+			}
+			set status end ;# all is okay now
+			}
+		}
+
+		# Display any errors/warnings
+		set errCnt [$caex getErrorCount]
+		for {set ndx 1} {$ndx <= $errCnt} {incr ndx} {
+			puts $fexmod "[$caex getErrorCode $ndx]: '[$caex getErrorInformation $ndx]'"
+		}
+		# abort/end the CaeExport mode
+		$caex $status
+	}
+
+	if {[string compare $save_native YES]==0} {
+		set exportDir [file join $scriptDir grids/2dquasi]
+		file mkdir $exportDir
+		pw::Application save "$exportDir/$3dgridname.pw"
+	}
+}
 
 set time_end [pwu::Time now]
 set runtime [pwu::Time subtract $time_end $time_start]
 set tmin [expr int([lindex $runtime 0]/60)]
 set tsec [expr [lindex $runtime 0]%60]
 set tmsec [expr int(floor([lindex $runtime 1]/1000))]
-set ncell [expr [join $ncells +]]
-set gorder [string length $ncell]
 
-if {$gorder<7} {
-	set gridID "[string range $ncell 0 2]k"
-} elseif {$gorder>=7 && $gorder<10} {
-	set gridID "[string range [expr $ncell/1000000] 0 2]m[string range [expr int($ncell%1000000)] 0 2]k"
-}
-
-set fexmod [open "$scriptDir/output.txt" w]
-puts $fexmod "total domains: [llength $ncells]"
-puts $fexmod "total cells: $ncell cells"
-puts $fexmod "min area: [format "%*e" 5 $domexmv]"
+puts $fexmod [string repeat - 50]
 puts $fexmod "runtime: $tmin min $tsec sec $tmsec ms" 
 puts $fexmod [string repeat - 50]
-
-if {[string compare $cae_export YES]==0} {
-	# gathering all domains
-	set alldoms [list {*}$bldoms {*}$smthd]
-
-	# creating export directory
-	set exportDir [file join $scriptDir grids]
-
-	file mkdir $exportDir
-
-	# CAE specificity in the output file!
-	puts $fexmod "Current solver: [set curSolver [pw::Application getCAESolver]]"
-
-	set validExts [pw::Application getCAESolverAttribute FileExtensions]
-	puts $fexmod "Valid file extensions: '$validExts'"
-
-	set defExt [lindex $validExts 0]
-
-	set caex [pw::Application begin CaeExport $alldoms]
-	append gridname lev $res_lev "_" $gridID
-
-	set destType [pw::Application getCAESolverAttribute FileDestination]
-	switch $destType {
-		Filename { set dest [file join $exportDir "$gridname.$defExt"] }
-		Folder   { set dest $exportDir }
-		default  { return -code error "Unexpected FileDestination value" }
-	}
-	puts $fexmod "Exporting to $destType: '$dest'"
-	puts $fexmod [string repeat - 50]
-
-	# Initialize the CaeExport mode
-	set status abort  ;
-	if { ![$caex initialize $dest] } {
-		puts $fexmod {$caex initialize failed!}
-	} else {
-		set dashes [string repeat - 50]
-		if { ![catch {$caex setAttribute FilePrecision Double}] } {
-			puts $fexmod "setAttribute FilePrecision Double"
-		}
-
-		if { ![$caex verify] } {
-			puts $fexmod {$caex verify failed!}
-		} elseif { ![$caex canWrite] } {
-			puts $fexmod {$caex canWrite failed!}
-		} elseif { ![$caex write] } {
-			puts $fexmod {$caex write failed!}
-		} elseif { 0 != [llength [set feCnts [$caex getForeignEntityCounts]]] } {
-		# print entity counts reported by the exporter
-		set fmt {   %-22.22s | %6.6s |}
-		puts $fexmod "Number of grid entities exported:"
-		puts $fexmod [format $fmt {Entity Type} Count]
-		puts $fexmod [format $fmt $dashes $dashes]
-		dict for {key val} $feCnts {
-			puts $fexmod [format $fmt $key $val]
-		}
-		set status end ;# all is okay now
-		}
-	}
-
-	# Display any errors/warnings
-	set errCnt [$caex getErrorCount]
-	for {set ndx 1} {$ndx <= $errCnt} {incr ndx} {
-		puts $fexmod "[$caex getErrorCode $ndx]: '[$caex getErrorInformation $ndx]'"
-	}
-	# abort/end the CaeExport mode
-	$caex $status
-}
-
-if {[string compare $save_native YES]==0} {
-	set exportDir [file join $scriptDir grids]
-	file mkdir $exportDir
-	pw::Application save "$exportDir/$gridname.pw"
-}
-
 close $fexmod
-
-puts "Grid level $res_lev generated"

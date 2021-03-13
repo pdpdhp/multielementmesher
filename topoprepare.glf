@@ -45,14 +45,28 @@ set fixd []
 set fixedg []
 set bldoms []
 
+#CAE Boundary Condition
+set conslatbc []
+set domslatbc []
+set conwingbc []
+set domwingbc []
+set conflapbc []
+set domflapbc []
+set confarbc []
+set domfarbc []
+
 if {$airfoil==1} {
-	puts "2-D CRM-HL wing section: fully structured multi-block grid generator!"
+	puts "STRUCTURED MULTIBLOCK GRID ON 2-D CRM-HL WING SECTION."
 } elseif {$airfoil==2} {
-	puts "2-D 30P-30N airfoil configuration: this part hasn't finished yet, please switch to 1!"
+	puts "2-D 30P-30N MULTI-ELEMENT AIRFOIL: this part hasn't finished yet, please switch to 1!"
 } else {
+	puts "PLEASE SELECT THE RIGHT CONFIGURATION!"
+	break
+}
 
-puts "Please specify the right airfoil configuration!"
-
+if {[string compare $model_Q2D NO]==0 && [string compare $model_2D NO]==0} {
+	puts "PLEASE SELECT EITHER 2D OR QUASI 2D MODEL!"
+	break
 }
 
 if {$airfoil==1} {
@@ -425,8 +439,10 @@ $lowsrf0 setEndRate $laySpcGR
 [lindex $con_alsp 1] setDistribution 1 $lowsrf0
 [lindex $con_alsp 1] setSubConnectorDimensionFromDistribution 1
 
+set con_alsp_sp [[lindex $con_alsp 1] split -I [list [lindex [[lindex $con_alsp 1] closestCoordinate [[lindex $con_alsp 1] getPosition -arc 0.9975]] 0]]]
+
 #airfoil BL extrusion
-set a_edge [pw::Edge createFromConnectors [list $wu [lindex $con_alsp 0] [lindex $con_alsp 1] $wc $wte]]
+set a_edge [pw::Edge createFromConnectors [list $wu [lindex $con_alsp 0] [lindex $con_alsp_sp 1] [lindex $con_alsp_sp 0] $wc $wte]]
 set a_dom [pw::DomainStructured create]
 $a_dom addEdge $a_edge
 set a_extrusion [pw::Application begin ExtrusionSolver [list $a_dom]]
@@ -441,6 +457,8 @@ $a_dom setExtrusionSolverAttribute NormalImplicitSmoothing $imp_sg
 $a_dom setExtrusionSolverAttribute NormalVolumeSmoothing $vol_sg
 $a_extrusion run $stp_sg
 $a_extrusion end
+
+set conwingbc [list $wte $wu [lindex $con_alsp 0] [lindex $con_alsp_sp 0] [lindex $con_alsp_sp 1] $wc]
 
 #slat BL extrusion
 set s_edge [pw::Edge createFromConnectors [list $ste $sl $sl_edge [lindex $susp 0] [lindex $susp 1]]]
@@ -458,6 +476,8 @@ $s_dom setExtrusionSolverAttribute NormalImplicitSmoothing $imp_sg
 $s_dom setExtrusionSolverAttribute NormalVolumeSmoothing $vol_sg
 $s_extrusion run $stp_sg
 $s_extrusion end
+
+set conslatbc [list $ste $sl $sl_edge [lindex $susp 1] [lindex $susp 0]]
 
 set wexcon [[$a_dom getEdge 2] getConnector 1]
 set con_flapsp [$fu split [$fu getParameter -closest [$wexcon getXYZ -arc 1]]]
@@ -548,6 +568,8 @@ $f_dom setExtrusionSolverAttribute NormalVolumeSmoothing $vol_sg
 $f_extrusion run $stp_sg
 $f_extrusion end
 
+set conflapbc [list $fte [lindex $fusp 0] [lindex $fusp 1] [lindex $con_flapsp 1] [lindex $flsp 0] [lindex $flsp 1]]
+
 set wcon [[$a_dom getEdge 3] getConnector 1]
 set wconsp [$wcon split -I [list [expr [$wcon getDimension]-$tpts2_sg+1] [expr [$wcon getDimension]-$tpts2_sg-[$wu getDimension]+2]\
 					[$wc getDimension]]]
@@ -575,32 +597,33 @@ set fu [lindex $fconsp 1]
 set fl [lindex $fconsp 0]
 set fte [lindex $fconsp 2]
 
+set xdownstream 7000
 set ptA {0.88571221 0.30586792 0}
 set ptB {0.77940487 -0.63194054 0}
-set ptC {500.77940487 -5.63194054 0}
-set ptD {500.77940487 -50.63194054 0}
+set ptC [list $xdownstream {*}{-5.63194054 0}]
+set ptD [list $xdownstream {*}{-50.63194054 0}]
 
 set ptAs [[[lindex $sconsp 0] getNode Begin] getXYZ]
 set ptAAs [[$sl getNode End] getXYZ]
 set ptAAAs [[$sledg getNode End] getXYZ]
 set ptBs {0.728742627189183 -0.22 0}
-set ptDs {500.77940487 -40.25092185 0}
+set ptDs [list $xdownstream {*}{-40.25092185 0}]
 
 set ptAsu [[$su getNode End] getXYZ]
 set ptBsu {0.85550659 0.134600874663324 0.0}
-set ptCsu {500.77940487 -17.2149769207833 0.0}
+set ptCsu [list $xdownstream {*}{-17.2149769207833 0.0}]
 
 set ptAsu2 [[$sl getNode Begin] getXYZ]
 set ptBsu2 {0.85550659 0.094999364 0.0}
-set ptCsu2 {500.77940487 -25.759813 0.0}
+set ptCsu2 [list $xdownstream {*}{-25.759813 0.0}]
 
 set ptAwu1 [[$wu getNode End] getXYZ]
 set ptBwu1 {1.14149 -0.09484753 0.0}
-set ptCwu1 {500.77940487 -30.296267 0.0}
+set ptCwu1 [list $xdownstream {*}{-30.296267 0.0}]
 
 set ptAwu2 [[$wc getNode Begin] getXYZ]
 set ptBwu2 {1.1219531 -0.10870092 0.0}
-set ptCwu2 {500.77940487 -34.8654388929955 0.0}
+set ptCwu2 [list $xdownstream {*}{-34.8654388929955 0.0}]
 
 set con_seg [pw::SegmentConic create]
 $con_seg addPoint $ptA
@@ -641,7 +664,7 @@ $conl_con addSegment $conl_seg
 set con_conj [pw::Connector join [list $con_con $conl_con $conu_con]]
 $con_conj removeAllBreakPoints
 
-set con_consp [$con_conj split [list [$con_conj getParameter -arc 0.49847561] [$con_conj getParameter -arc 0.49866256]]]
+set con_consp [$con_conj split [list [$con_conj getParameter -closest {-0.20732979 0.048201124 -2.7755576e-17}] [$con_conj getParameter -closest {-0.23401671 -0.12687592 0.0}]]]
 
 set con_alsp [$wl split -I [list [expr [$wl getDimension] - [$sl getDimension] +1]]]
 
@@ -652,12 +675,12 @@ set con_fusp [[lindex $con_flapsp 1] split -I [expr [[lindex $con_flapsp 1] getD
 
 set ptAfu1 [[[lindex $con_fusp 1] getNode Begin] getXYZ]
 set ptBfu1 {1.60191884390277 -0.375531959413752 0.0}
-set ptCfu1 {500.77940487 -37.3547872468103 0.0}
+set ptCfu1 {$xdownstream -37.3547872468103 0.0}
 set ptDfu1 { 1.1109934 -0.099161894 0.0}
 
 set ptAfu2 [[[lindex $con_flsp 0] getNode End] getXYZ]
 set ptBfu2 {1.23609367689048 -0.291353543166955 0.0}
-set ptCfu2 {500.77940487 -39.0603268185674 0.0}
+set ptCfu2 {$xdownstream -39.0603268185674 0.0}
 
 set reg1_seg1 [pw::SegmentSpline create]
 $reg1_seg1 addPoint $ptAsu
@@ -725,7 +748,7 @@ $reg2_con4 addSegment $reg2_seg4
 set conlowsp [[lindex $con_consp 2] split [list [[lindex $con_consp 2] getParameter -closest [[$reg2_con4 getNode End] getXYZ]]]]
 
 set conupsp [[lindex $con_alsp 0] split -I [list [lindex [[lindex $con_alsp 0] closestCoordinate [$reg2_con4 getPosition -arc 1]] 0]\
-					 [lindex [[lindex $con_alsp 0] closestCoordinate [[lindex $con_alsp 0] getPosition -arc 0.006]] 0]]]
+					 									[[lindex $con_alsp_sp 1] getDimension]]]
 
 set reg1_seg4 [pw::SegmentSpline create]
 $reg1_seg4 addPoint [[[lindex $conupsp 1] getNode End] getXYZ]
