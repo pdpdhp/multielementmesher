@@ -41,23 +41,23 @@ These parameters on the top of the mesher.glf can be used to customize the grid:
 #--------------------------------------------
 #Grid Levels vary from the first line of the grid_specification.txt to the last line as the coarsest level!
 #Default values from 6 to 0!
-set res_lev 4
+set res_lev 5
 
-#LOCAL AND GLOBAL SMOOTHER:
+#GLOBAL AND LOCAL SMOOTHER:
 #--------------------------------------------
-# running structured elliptic solver over local domains only if global is switched off (e.g. near the configuration) (YES/NO)
-set local_smth NO
-
-# number of iterations to run the local elliptic solver.
-# (>1000 Recommended)
-set lsmthiter 2000
-
 # running elliptic solver over all domains excluding boundary layers. (YES/NO)
 set global_smth YES
 
 # number of iterations to run the global elliptic solver.
 # (>1000 Recommended)
 set gsmthiter 3000
+
+# running structured elliptic solver over local domains only if global is switched off (e.g. near the configuration) (YES/NO)
+set local_smth NO
+
+# number of iterations to run the local elliptic solver.
+# (>1000 Recommended)
+set lsmthiter 2000
 
 #GROWTH RATIOS:
 #--------------------------------------------
@@ -86,7 +86,7 @@ set fixed_snodes YES
 
 # Number of points in spanwise direction. This parameter will be ignored
 # if you opted NO above and set automatically based on maximum spacing over wing, slat and flap.
-set span_dimension 3
+set span_dimension 10
 
 #CAE EXPORT:
 #--------------------------------------------

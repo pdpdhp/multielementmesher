@@ -20,7 +20,7 @@ set scriptDir [file dirname [info script]]
 
 set xtr1 200
 
-set spcgrfact [list 1.08 1.1 1.12 1.15]
+set spcgrfact [list 1.04 1.06 1.08 1.1]
 set sply [list 0.0003 0.0004 0.0005 0.001 0.003 0.01 0.03]
 set levratio [list 0.9999 1 2 3 4 5 6]
 
@@ -29,7 +29,7 @@ for {set i 0} {$i<[llength $spcgrfact]} {incr i} {
 }
 
 
-set maxstpsize [list 12 24 48 96 192 384]
+set maxstpsize [list 12 24 48 96 192 350]
 
 for {set i 0} {$i<[llength $maxstpsize]} {incr i} {
 	lappend maxstpextr [expr [lindex $maxstpsize $i]*([lindex $levratio $res_lev]/6.0)]

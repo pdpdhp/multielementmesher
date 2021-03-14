@@ -24,23 +24,23 @@ set airfoil 1
 #--------------------------------------------
 #Grid Levels vary from the first line of the grid_specification.txt to the last line as the coarsest level!
 #Default values from 6 to 0!
-set res_lev 6
+set res_lev 5
 
-#LOCAL AND GLOBAL SMOOTHER:
+#GLOBAL AND LOCAL SMOOTHER:
 #--------------------------------------------
-# running structured elliptic solver over local domains only if global is switched off (e.g. near the configuration) (YES/NO)
-set local_smth NO
-
-# number of iterations to run the local elliptic solver.
-# (>1000 Recommended)
-set lsmthiter 2000
-
 # running elliptic solver over all domains excluding boundary layers. (YES/NO)
 set global_smth YES
 
 # number of iterations to run the global elliptic solver.
 # (>1000 Recommended)
 set gsmthiter 3000
+
+# running structured elliptic solver over local domains only if global is switched off (e.g. near the configuration) (YES/NO)
+set local_smth NO
+
+# number of iterations to run the local elliptic solver.
+# (>1000 Recommended)
+set lsmthiter 2000
 
 #GROWTH RATIOS:
 #--------------------------------------------
@@ -69,7 +69,7 @@ set fixed_snodes YES
 
 # Number of points in spanwise direction. This parameter will be ignored
 # if you opted NO above and set automatically based on maximum spacing over wing, slat and flap.
-set span_dimension 3
+set span_dimension 10
 
 #CAE EXPORT:
 #--------------------------------------------
@@ -791,13 +791,13 @@ $tt0 addEntity [lindex $conu_tail 1]
 $tt0 examine
 set tt0v [$tt0 getValue [lindex $conu_tail 1] 1]
 
-set maxmidspc [list 1875 1875 1875 3750 7500 15000 30000]
+set maxmidspc [list 1000 1300 1800 5000 10000 20000 30000]
 
 set tt1 [pw::DistributionGrowth create]
 $tt1 setBeginSpacing $tt0v
 set laySpcBegin $tt0v
 set midSpc [expr [$tt0 getMaximum]*[lindex $maxmidspc $res_lev]]
-set laySpcGR 1.1
+set laySpcGR 1.07
 
 for {set i 0} {$laySpcBegin <= $midSpc} {incr i} {
 	set laySpcBegin [expr $laySpcBegin*$laySpcGR]
@@ -845,7 +845,6 @@ $tail10seg setEndSpacing 0
 $tail10seg setVariable [[$confu2_con getDistribution 1] getVariable]
 $confu2_con setDistribution 1 $tail10seg
 [$confu2_con getDistribution 1] setBeginSpacing $tt00v
-
 
 #tail 5
 [lindex $conl_tail 3] setDimension [$confu2_con getDimension]
