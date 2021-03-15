@@ -24,7 +24,7 @@ set airfoil 1
 #--------------------------------------------
 #Grid Levels vary from the first line of the grid_specification.txt to the last line as the coarsest level!
 #Default values from 6 to 0!
-set res_lev 5
+set res_lev 1
 
 #GLOBAL AND LOCAL SMOOTHER:
 #--------------------------------------------
