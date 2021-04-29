@@ -135,6 +135,7 @@ The script can generate 2D and quasi 2D grids at the same time. The quasi 2d gri
 
 For both 2D and quasi 2D grids boundary conditions are assigned appropriately to the right boundaries but are not set. Based on the solver, they can be set in Pointwise.
 
+In case you encounter any issues using the scripts please use the issue feature on Github and let me know of that or send me an email. I will do my best to address that as soon as possible.
 
 ![grid1](https://github.com/pdpdhp/multielementmesher/blob/master/grid1.png)
 
