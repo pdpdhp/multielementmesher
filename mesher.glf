@@ -18,7 +18,7 @@ set scriptDir [file dirname [info script]]
 #multi-element airfoil selection 
 #Currently only 2-D CRM-HL wing section is supported!
 #DONT CHANGE THIS!
-set airfoil 1
+set airfoil 6
 
 #GRID REFINEMENT LEVEL:
 #--------------------------------------------
