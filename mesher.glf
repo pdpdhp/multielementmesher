@@ -24,16 +24,16 @@ set airfoil 1
 #--------------------------------------------
 #Grid Levels vary from the first line of the grid_specification.txt to the last line as the coarsest level!
 #Default values from 6 to 0!
-set res_lev 1
+set res_lev 6
 
 #GLOBAL AND LOCAL SMOOTHER:
 #--------------------------------------------
 # running elliptic solver over all domains excluding boundary layers. (YES/NO)
-set global_smth YES
+set global_smth NO
 
 # number of iterations to run the global elliptic solver.
 # (>1000 Recommended)
-set gsmthiter 3000
+set gsmthiter 7000
 
 # running structured elliptic solver over local domains only if global is switched off (e.g. near the configuration) (YES/NO)
 set local_smth NO
@@ -59,7 +59,7 @@ set srfgrfu 1.18
 set model_2D YES
 
 # QUASI 2D MESH. (YES/NO)
-set model_Q2D YES
+set model_Q2D NO
 
 # span dimension for quasi 2d model in -Y direction
 set span 1.0
@@ -69,18 +69,24 @@ set fixed_snodes YES
 
 # Number of points in spanwise direction. This parameter will be ignored
 # if you opted NO above and set automatically based on maximum spacing over wing, slat and flap.
-set span_dimension 10
+set span_dimension 3
 
 #CAE EXPORT:
 #--------------------------------------------
 #CAE solver selection. (Exp. SU2 or CGNS)
 set cae_solver CGNS
 
+#HIGH ORDER DESCRETIZATION EXPORT POLYNOMIAL DEGREE (Q1:Linear - Q4:quartic)
+set POLY_DEG Q2
+
+#HIGH ORDER DESCRETIZATION SEPARATE GUIDELINE(YES/NO)
+set HO_GEN YES
+
 #enables CAE export (YES/NO)
 set cae_export YES
 
 #saves the native format (YES/NO)
-set save_native YES
+set save_native NO
 
 #INITIAL GROWTH RATIOS FOR NODE DISTRIBUTION:
 #--------------------------------------------
@@ -93,10 +99,21 @@ set r2c3gr 1.09
 # region 3 con 1 growth ratio --> region 3 refers to the region on top of the flap!
 set r3c1gr 1.09
 
-
 ##=============================================================================================================
 #Importing Meshing Guidline generated based on the flow condition!
-set fp [open "$scriptDir/grid_specification.txt" r]
+
+set guidelineDir [file join $scriptDir guideline]
+
+file mkdir $guidelineDir
+
+#Importing Meshing Guidline
+
+if {[string compare $HO_GEN YES]==0} {
+	set fp [open "$guidelineDir/grid_specification_HO.txt" r]
+} else {
+	set fp [open "$guidelineDir/grid_specification_metric.txt" r]
+}
+
 set i 0
 while {[gets $fp line] >= 0} {
 	set g_spec($i) {}
@@ -106,7 +123,6 @@ while {[gets $fp line] >= 0} {
 	incr i
 }
 close $fp
-
 
 for {set j 1} {$j<$i} {incr j} {
 	lappend y_p [lindex $g_spec($j) 0]
@@ -123,103 +139,27 @@ for {set j 1} {$j<$i} {incr j} {
 	lappend extr [lindex $g_spec($j) 11]
 }
 
-if {$res_lev==0} {
-			set ypg [lindex $y_p 0]
-			set dsg [lindex $d_s 0]
-			set grg [lindex $gr 0]
-			set chord_sg [lindex $chord_s 0]
-			set ter_sg [lindex $ter 0]
-			set ler_sg [lindex $ler 0]
-			set tpts1_sg [lindex $tpt1 0]
-			set tpts2_sg [lindex $tpt2 0]
-			set exp_sg [lindex $exp 0]
-			set imp_sg [lindex $imp 0]
-			set vol_sg [lindex $vol 0]
-			set stp_sg [lindex $extr 0]
-} elseif {$res_lev==1} {
-			set ypg [lindex $y_p 1]
-			set dsg [lindex $d_s 1]
-			set grg [lindex $gr 1]
-			set chord_sg [lindex $chord_s 1]
-			set ter_sg [lindex $ter 1]
-			set ler_sg [lindex $ler 1]
-			set tpts1_sg [lindex $tpt1 1]
-			set tpts2_sg [lindex $tpt2 1]
-			set exp_sg [lindex $exp 1]
-			set imp_sg [lindex $imp 1]
-			set vol_sg [lindex $vol 1]
-			set stp_sg [lindex $extr 1]
-} elseif {$res_lev==2} {
-			set ypg [lindex $y_p 2]
-			set dsg [lindex $d_s 2]
-			set grg [lindex $gr 2]
-			set chord_sg [lindex $chord_s 2]
-			set ter_sg [lindex $ter 2]
-			set ler_sg [lindex $ler 2]
-			set tpts1_sg [lindex $tpt1 2]
-			set tpts2_sg [lindex $tpt2 2]
-			set exp_sg [lindex $exp 2]
-			set imp_sg [lindex $imp 2]
-			set vol_sg [lindex $vol 2]
-			set stp_sg [lindex $extr 2]
-} elseif {$res_lev==3} {
-			set ypg [lindex $y_p 3]
-			set dsg [lindex $d_s 3]
-			set grg [lindex $gr 3]
-			set chord_sg [lindex $chord_s 3]
-			set ter_sg [lindex $ter 3]
-			set ler_sg [lindex $ler 3]
-			set tpts1_sg [lindex $tpt1 3]
-			set tpts2_sg [lindex $tpt2 3]
-			set exp_sg [lindex $exp 3]
-			set imp_sg [lindex $imp 3]
-			set vol_sg [lindex $vol 3]
-			set stp_sg [lindex $extr 3]
-} elseif {$res_lev==4} {
-			set ypg [lindex $y_p 4]
-			set dsg [lindex $d_s 4]
-			set grg [lindex $gr 4]
-			set chord_sg [lindex $chord_s 4]
-			set ter_sg [lindex $ter 4]
-			set ler_sg [lindex $ler 4]
-			set tpts1_sg [lindex $tpt1 4]
-			set tpts2_sg [lindex $tpt2 4]
-			set exp_sg [lindex $exp 4]
-			set imp_sg [lindex $imp 4]
-			set vol_sg [lindex $vol 4]
-			set stp_sg [lindex $extr 4]
-} elseif {$res_lev==5} {
-			set ypg [lindex $y_p 5]
-			set dsg [lindex $d_s 5]
-			set grg [lindex $gr 5]
-			set chord_sg [lindex $chord_s 5]
-			set ter_sg [lindex $ter 5]
-			set ler_sg [lindex $ler 5]
-			set tpts1_sg [lindex $tpt1 5]
-			set tpts2_sg [lindex $tpt2 5]
-			set exp_sg [lindex $exp 5]
-			set imp_sg [lindex $imp 5]
-			set vol_sg [lindex $vol 5]
-			set stp_sg [lindex $extr 5]
-} elseif {$res_lev==6} {
-			set ypg [lindex $y_p 6]
-			set dsg [lindex $d_s 6]
-			set grg [lindex $gr 6]
-			set chord_sg [lindex $chord_s 6]
-			set ter_sg [lindex $ter 6]
-			set ler_sg [lindex $ler 6]
-			set tpts1_sg [lindex $tpt1 6]
-			set tpts2_sg [lindex $tpt2 6]
-			set exp_sg [lindex $exp 6]
-			set imp_sg [lindex $imp 6]
-			set vol_sg [lindex $vol 6]
-			set stp_sg [lindex $extr 6]
+set NUM_REF [llength $y_p]
+
+if {$res_lev<$NUM_REF} {
+	set ypg [lindex $y_p $res_lev]
+	set dsg [lindex $d_s $res_lev]
+	set grg [lindex $gr $res_lev]
+	set chord_sg [lindex $chord_s $res_lev]
+	set ter_sg [lindex $ter $res_lev]
+	set ler_sg [lindex $ler $res_lev]
+	set tpts1_sg [lindex $tpt1 $res_lev]
+	set tpts2_sg [lindex $tpt2 $res_lev]
+	set exp_sg [lindex $exp $res_lev]
+	set imp_sg [lindex $imp $res_lev]
+	set vol_sg [lindex $vol $res_lev]
+	set stp_sg [lindex $extr $res_lev]
 } else {
 
-puts "PLEASE SELECT THE RIGHT REFINEMENT LEVEL BTW 0 (FINEST) AND 6 (COARSEST)."
+	puts "PLEASE SELECT RIGHT REFINEMENT LEVEL ACCORDING TO YOUR GUIDELINE FILE: res_lev"
+	break
 
 }
-
 
 puts "GRID GUIDELINE: Y+:$ypg Delta_S(m):$dsg GR:$grg Chordwise_Spacing(m):$chord_sg"
 
@@ -1404,6 +1344,10 @@ set bcflap [pw::BoundaryCondition create]
 set bcfar [pw::BoundaryCondition create]
 	$bcfar setName farfield
 
+if {[string compare $cae_solver CGNS]==0} {
+	pw::Application setCAESolverAttribute ExportPolynomialDegree $POLY_DEG
+}
+
 if {[string compare $model_2D YES]==0} {
 	
 	#assigning BCs
@@ -1517,7 +1461,7 @@ if {[string compare $model_2D YES]==0} {
 
 if {[string compare $model_Q2D YES]==0} {
 	pw::Application setCAESolver $cae_solver 3
-	
+
 	#grid tolerance
 	pw::Grid setNodeTolerance 1.0e-7
 	pw::Grid setConnectorTolerance 1.0e-7
