@@ -55,10 +55,11 @@ set domflapbc []
 set confarbc []
 set domfarbc []
 
-if {$airfoil==1} {
-	puts "STRUCTURED MULTIBLOCK GRID ON 2-D CRM-HL WING SECTION."
-} elseif {$airfoil==2} {
-	puts "2-D 30P-30N MULTI-ELEMENT AIRFOIL: this part hasn't finished yet, please switch to 1!"
+if {[string compare $airfoil CRMHL-2D]==0} {
+	puts "STRUCTURED MULTIBLOCK GRID | 2D CRM-HL WING SECTION."
+} elseif {[string compare $airfoil 30P30N]==0} {
+	puts "2-D 30P-30N MULTI-ELEMENT AIRFOIL: this part hasn't finished yet, please switch to CRMHL-2D!"
+	break
 } else {
 	puts "PLEASE SELECT THE RIGHT CONFIGURATION!"
 	break
@@ -69,18 +70,19 @@ if {[string compare $model_Q2D NO]==0 && [string compare $model_2D NO]==0} {
 	break
 }
 
-if {$airfoil==1} {
+if {[string compare $airfoil CRMHL-2D]==0} {
 	#Import Geometry
 	set tmp_model [pw::Application begin DatabaseImport]
-	  $tmp_model initialize -strict -type Automatic $scriptDir/crmhl-2dcut.igs
+	  $tmp_model initialize -strict -type Automatic $geoDir/crmhl-2dcut.igs
 	  $tmp_model read
 	  $tmp_model convert
 	$tmp_model end
 	unset tmp_model
+	
 } else {
 	#Import Geometry
 	set tmp_model [pw::Application begin DatabaseImport]
-	  $tmp_model initialize -strict -type Automatic $scriptDir/2010_30p30n_thik_te_18inches.igs
+	  $tmp_model initialize -strict -type Automatic $geoDir/2010_30p30n_thik_te_18inches.igs
 	  $tmp_model read
 	  $tmp_model convert
 	$tmp_model end

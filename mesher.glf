@@ -15,10 +15,9 @@ set scriptDir [file dirname [info script]]
 
 #MULTI-ELEMENT CONFIGURATION:
 #--------------------------------------------
-#multi-element airfoil selection 
-#Currently only 2-D CRM-HL wing section is supported!
-#DONT CHANGE THIS!
-set airfoil 6
+#multi-element airfoil selection (CRMHL-2D or 30P30N)
+#Currently only 2D CRM-HL WING SECTION is supported!
+set airfoil CRMHL-2D
 
 #GRID REFINEMENT LEVEL:
 #--------------------------------------------
@@ -33,7 +32,7 @@ set global_smth NO
 
 # number of iterations to run the global elliptic solver.
 # (>1000 Recommended)
-set gsmthiter 7000
+set gsmthiter 1000
 
 # running structured elliptic solver over local domains only if global is switched off (e.g. near the configuration) (YES/NO)
 set local_smth NO
@@ -59,17 +58,17 @@ set srfgrfu 1.18
 set model_2D YES
 
 # QUASI 2D MESH. (YES/NO)
-set model_Q2D NO
+set model_Q2D YES
 
-# span dimension for quasi 2d model in -Y direction
-set span 1.0
+# span dimension for quasi 2d model in -Y direction (max 3.0)
+set span 1.560
 
 # Fix number of points in spanwise direction? if YES, indicate number of points below. (YES/NO)
 set fixed_snodes YES
 
 # Number of points in spanwise direction. This parameter will be ignored
 # if you opted NO above and set automatically based on maximum spacing over wing, slat and flap.
-set span_dimension 3
+set span_dimension 5
 
 #CAE EXPORT:
 #--------------------------------------------
@@ -79,11 +78,11 @@ set cae_solver CGNS
 #HIGH ORDER DESCRETIZATION EXPORT POLYNOMIAL DEGREE (Q1:Linear - Q4:quartic)
 set POLY_DEG Q2
 
-#HIGH ORDER DESCRETIZATION SEPARATE GUIDELINE(YES/NO)
-set HO_GEN YES
+#USING HIGH ORDER DESCRETIZATION GUIDELINE SEPARATELY (YES/NO)
+set HO_GEN NO
 
 #enables CAE export (YES/NO)
-set cae_export YES
+set cae_export NO
 
 #saves the native format (YES/NO)
 set save_native NO
@@ -105,6 +104,10 @@ set r3c1gr 1.09
 set guidelineDir [file join $scriptDir guideline]
 
 file mkdir $guidelineDir
+
+set geoDir [file join $scriptDir geo]
+
+file mkdir $geoDir
 
 #Importing Meshing Guidline
 
@@ -1495,6 +1498,11 @@ if {[string compare $model_Q2D YES]==0} {
 		$domtrn end
 	} else {
 		$domtrn run [expr $span_dimension-1]
+		if {[string compare [lindex [$domtrn getRunResult] 0] Completed]!=0} {
+			puts "THE TRANSLATE EXTRUSION FAILD. PLEASE TRUN ON THE GLOBAL SMOOTHER WITH PROPER NUMBER OF ITERATIONS TO PREVENT THIS!"
+			$domtrn end
+			break
+		}
 		$domtrn end
 	}
 	
@@ -1794,6 +1802,25 @@ if {[string compare $model_Q2D YES]==0} {
 	foreach domain $domfarqbc block $blkfarqbc {
 		$bcfar apply [list [list $block $domain]]
 	}
+	
+	if {[string compare $POLY_DEG Q1]!=0} {
+		pw::Display setCurrentLayer 10
+		set tmp_model [pw::Application begin DatabaseImport]
+		  $tmp_model initialize -strict -type Automatic $geoDir/crmhl2dcut_extr.iges
+		  $tmp_model read
+		  $tmp_model convert
+		$tmp_model end
+		unset tmp_model
+		
+		set dq_database [pw::Layer getLayerEntities -type pw::Quilt 10]
+	}
+	
+
+	set wsf_surfaces [pw::Collection create]
+	$wsf_surfaces set [list {*}$domwingqbc {*}$domslatqbc {*}$domflapqbc]
+	$wsf_surfaces do setLayer 30
+
+	pw::Entity project -type ClosestPoint [list {*}$domwingqbc {*}$domslatqbc {*}$domflapqbc] $dq_database
 	
 	#examine
 	set blkexm [pw::Examine create BlockVolume]
