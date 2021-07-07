@@ -1,2 +1,0 @@
-  Reynolds   Ref_chord(m) Pressure(Pa)      Temp(K)       Density(Kg/m3)       Mach 
-5.00000e+06  1.00000e+00 1.0132500e+05  2.7210000e+02 1.297306036708125e+00  2.00000e-01
