@@ -399,6 +399,10 @@ $fte setDimension $tpts2_sg
 
 $ste setDimension $tpts1_sg
 
+pw::Entity project -type ClosestPoint $ste [lindex $alldegs 1]
+
+pw::Entity project -type ClosestPoint $sl [lindex $alldegs 10]
+
 set slatlow_sp [$sl split -I [list [expr [$sl getDimension]-[[lindex $susp 1] getDimension]+1]]]
 
 set sl [lindex $slatlow_sp 0]

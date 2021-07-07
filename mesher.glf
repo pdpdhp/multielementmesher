@@ -28,11 +28,11 @@ set res_lev 6
 #GLOBAL AND LOCAL SMOOTHER:
 #--------------------------------------------
 # running elliptic solver over all domains excluding boundary layers. (YES/NO)
-set global_smth NO
+set global_smth YES
 
 # number of iterations to run the global elliptic solver.
 # (>1000 Recommended)
-set gsmthiter 1000
+set gsmthiter 3000
 
 # running structured elliptic solver over local domains only if global is switched off (e.g. near the configuration) (YES/NO)
 set local_smth NO
@@ -61,14 +61,14 @@ set model_2D YES
 set model_Q2D YES
 
 # span dimension for quasi 2d model in -Y direction (max 3.0)
-set span 1.560
+set span 1.0
 
 # Fix number of points in spanwise direction? if YES, indicate number of points below. (YES/NO)
 set fixed_snodes YES
 
 # Number of points in spanwise direction. This parameter will be ignored
 # if you opted NO above and set automatically based on maximum spacing over wing, slat and flap.
-set span_dimension 5
+set span_dimension 3
 
 #CAE EXPORT:
 #--------------------------------------------
@@ -79,7 +79,7 @@ set cae_solver CGNS
 set POLY_DEG Q2
 
 #USING HIGH ORDER DESCRETIZATION GUIDELINE SEPARATELY (YES/NO)
-set HO_GEN NO
+set HO_GEN YES
 
 #enables CAE export (YES/NO)
 set cae_export NO
@@ -1499,7 +1499,7 @@ if {[string compare $model_Q2D YES]==0} {
 	} else {
 		$domtrn run [expr $span_dimension-1]
 		if {[string compare [lindex [$domtrn getRunResult] 0] Completed]!=0} {
-			puts "THE TRANSLATE EXTRUSION FAILD. PLEASE TRUN ON THE GLOBAL SMOOTHER WITH PROPER NUMBER OF ITERATIONS TO PREVENT THIS!"
+			puts "TRANSLATE EXTRUSION FAILED! PLEASE TRUN ON THE GLOBAL SMOOTHER WITH PROPER NUMBER OF ITERATIONS TO PREVENT THIS!"
 			$domtrn end
 			break
 		}
