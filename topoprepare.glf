@@ -13,7 +13,6 @@
 #
 #==============================================================
 
-
 package require PWI_Glyph 3.18.3
 
 pw::Application reset
@@ -55,10 +54,12 @@ set domflapbc []
 set confarbc []
 set domfarbc []
 
-if {$airfoil==1} {
-	puts "STRUCTURED MULTIBLOCK GRID ON 2-D CRM-HL WING SECTION."
-} elseif {$airfoil==2} {
-	puts "2-D 30P-30N MULTI-ELEMENT AIRFOIL: this part hasn't finished yet, please switch to 1!"
+if {[string compare $airfoil CRMHL-2D]==0} {
+	puts "STRUCTURED MULTIBLOCK GRID | 2D CRM-HL WING SECTION IMPORTED."
+	puts $symsepdd
+} elseif {[string compare $airfoil 30P30N]==0} {
+	puts "2-D 30P-30N MULTI-ELEMENT AIRFOIL: this part hasn't finished yet, please switch to CRMHL-2D!"
+	break
 } else {
 	puts "PLEASE SELECT THE RIGHT CONFIGURATION!"
 	break
@@ -69,18 +70,19 @@ if {[string compare $model_Q2D NO]==0 && [string compare $model_2D NO]==0} {
 	break
 }
 
-if {$airfoil==1} {
+if {[string compare $airfoil CRMHL-2D]==0} {
 	#Import Geometry
 	set tmp_model [pw::Application begin DatabaseImport]
-	  $tmp_model initialize -strict -type Automatic $scriptDir/crmhl-2dcut.igs
+	  $tmp_model initialize -strict -type Automatic $geoDir/crmhl-2dcut.igs
 	  $tmp_model read
 	  $tmp_model convert
 	$tmp_model end
 	unset tmp_model
+	
 } else {
 	#Import Geometry
 	set tmp_model [pw::Application begin DatabaseImport]
-	  $tmp_model initialize -strict -type Automatic $scriptDir/2010_30p30n_thik_te_18inches.igs
+	  $tmp_model initialize -strict -type Automatic $geoDir/2010_30p30n_thik_te_18inches.igs
 	  $tmp_model read
 	  $tmp_model convert
 	$tmp_model end
@@ -95,7 +97,7 @@ if {$airfoil==1} {
 set allquilts [pw::Database getAll -type pw::Quilt]
 set allmodels [pw::Database getAll -type pw::Model]
 set alldegs [pw::Database getAll -type pw::Curve]
-	
+
 set slatcons [list [lindex $alldegs 9] [lindex $alldegs 8]]
 pw::Curve join $slatcons
 
@@ -396,6 +398,10 @@ $fu setDistribution 1 $upf_dis
 $fte setDimension $tpts2_sg
 
 $ste setDimension $tpts1_sg
+
+pw::Entity project -type ClosestPoint $ste [lindex $alldegs 1]
+
+pw::Entity project -type ClosestPoint $sl [lindex $alldegs 10]
 
 set slatlow_sp [$sl split -I [list [expr [$sl getDimension]-[[lindex $susp 1] getDimension]+1]]]
 

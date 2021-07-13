@@ -11,14 +11,11 @@
 
 package require PWI_Glyph 3.18.3
 
-set scriptDir [file dirname [info script]]
-
 #MULTI-ELEMENT CONFIGURATION:
 #--------------------------------------------
-#multi-element airfoil selection 
-#Currently only 2-D CRM-HL wing section is supported!
-#DONT CHANGE THIS!
-set airfoil 6
+#multi-element airfoil selection (CRMHL-2D or 30P30N)
+#Currently only 2D CRM-HL WING SECTION is supported!
+set airfoil CRMHL-2D
 
 #GRID REFINEMENT LEVEL:
 #--------------------------------------------
@@ -29,11 +26,11 @@ set res_lev 6
 #GLOBAL AND LOCAL SMOOTHER:
 #--------------------------------------------
 # running elliptic solver over all domains excluding boundary layers. (YES/NO)
-set global_smth NO
+set global_smth YES
 
 # number of iterations to run the global elliptic solver.
 # (>1000 Recommended)
-set gsmthiter 7000
+set gsmthiter 1300
 
 # running structured elliptic solver over local domains only if global is switched off (e.g. near the configuration) (YES/NO)
 set local_smth NO
@@ -59,9 +56,9 @@ set srfgrfu 1.18
 set model_2D YES
 
 # QUASI 2D MESH. (YES/NO)
-set model_Q2D NO
+set model_Q2D YES
 
-# span dimension for quasi 2d model in -Y direction
+# span dimension for quasi 2d model in -Y direction (max 3.0)
 set span 1.0
 
 # Fix number of points in spanwise direction? if YES, indicate number of points below. (YES/NO)
@@ -79,14 +76,14 @@ set cae_solver CGNS
 #HIGH ORDER DESCRETIZATION EXPORT POLYNOMIAL DEGREE (Q1:Linear - Q4:quartic)
 set POLY_DEG Q2
 
-#HIGH ORDER DESCRETIZATION SEPARATE GUIDELINE(YES/NO)
+#USING HIGH ORDER DESCRETIZATION GUIDELINE SEPARATELY (YES/NO)
 set HO_GEN YES
 
 #enables CAE export (YES/NO)
-set cae_export YES
+set cae_export NO
 
 #saves the native format (YES/NO)
-set save_native NO
+set save_native YES
 
 #INITIAL GROWTH RATIOS FOR NODE DISTRIBUTION:
 #--------------------------------------------
@@ -102,9 +99,15 @@ set r3c1gr 1.09
 ##=============================================================================================================
 #Importing Meshing Guidline generated based on the flow condition!
 
+set scriptDir [file dirname [info script]]
+
 set guidelineDir [file join $scriptDir guideline]
 
 file mkdir $guidelineDir
+
+set geoDir [file join $scriptDir geo]
+
+file mkdir $geoDir
 
 #Importing Meshing Guidline
 
@@ -156,12 +159,17 @@ if {$res_lev<$NUM_REF} {
 	set stp_sg [lindex $extr $res_lev]
 } else {
 
-	puts "PLEASE SELECT RIGHT REFINEMENT LEVEL ACCORDING TO YOUR GUIDELINE FILE: res_lev"
+	puts "PLEASE SELECT THE RIGHT REFINEMENT LEVEL ACCORDING TO YOUR GUIDELINE FILE: res_lev"
 	break
 
 }
 
-puts "GRID GUIDELINE: Y+:$ypg Delta_S(m):$dsg GR:$grg Chordwise_Spacing(m):$chord_sg"
+set symsep [string repeat = 88]
+set symsepd [string repeat . 88]
+set symsepdd [string repeat - 88]
+
+puts "GRID GUIDELINE: Y+: $ypg | Delta_S(m): $dsg | GR: $grg | Chordwise_Spacing(m): $chord_sg"
+puts $symsep
 
 set time_start [pwu::Time now]
 
@@ -1320,7 +1328,10 @@ if {[string compare $local_smth YES]==0 && [string compare $global_smth NO]==0} 
 	
 	$dsolve run $lsmthiter
 	$dsolve end
+	
+	puts $symsepd
 	puts "LOCAL ELLIPTIC SOLVER FINISHED $lsmthiter ITERATIONS OVER [llength $doms] STRUCTURED DOMAINS"
+	puts $symsepdd
 }
 
 #=====================================================OUTTER DOMAIN EXTRUSION====================================
@@ -1343,6 +1354,8 @@ set bcflap [pw::BoundaryCondition create]
 	$bcflap setName flap
 set bcfar [pw::BoundaryCondition create]
 	$bcfar setName farfield
+
+set dashes [string repeat - 50]
 
 if {[string compare $cae_solver CGNS]==0} {
 	pw::Application setCAESolverAttribute ExportPolynomialDegree $POLY_DEG
@@ -1374,7 +1387,9 @@ if {[string compare $model_2D YES]==0} {
 		set gridID "[string range $ncell 0 2]k"
 	} elseif {$gorder>=7 && $gorder<10} {
 		set gridID "[string range [expr $ncell/1000000] 0 2]m[string range [expr int($ncell%1000000)] 0 2]k"
-	}
+	} elseif {$gorder>=10 && $gorder<13} {
+		set gridID "[string range [expr $ncell/1000000000] 0 2]b[string range [expr int($ncell%1000000000)] 0 2]m"
+}
 
 	append gridname lev $res_lev "_" $gridID
 	
@@ -1384,6 +1399,9 @@ if {[string compare $model_2D YES]==0} {
 	puts $fexmod "total domains: [llength $ncells]"
 	puts $fexmod "total cells: $ncell cells"
 	puts $fexmod "min area: [format "%*e" 5 $domexmv]"
+	
+	puts "2D GRID GENERATED FOR LEVEL $res_lev | TOTAL CELLS: $ncell QUADS"
+	puts $symsepdd
 	
 	if {[string compare $cae_export YES]==0} {
 		# creating export directory
@@ -1416,7 +1434,6 @@ if {[string compare $model_2D YES]==0} {
 		if { ![$caex initialize $dest] } {
 			puts $fexmod {$caex initialize failed!}
 		} else {
-			set dashes [string repeat - 50]
 			if { ![catch {$caex setAttribute FilePrecision Double}] } {
 				puts $fexmod "setAttribute FilePrecision Double"
 			}
@@ -1447,15 +1464,17 @@ if {[string compare $model_2D YES]==0} {
 		}
 		# abort/end the CaeExport mode
 		$caex $status
+	
+		puts "info: 2D GRID: $gridname.$defExt EXPORTED IN GRID DIR."
 	}
 
 	if {[string compare $save_native YES]==0} {
 		set exportDir [file join $scriptDir grids/2d]
 		file mkdir $exportDir
 		pw::Application save "$exportDir/$gridname.pw"
-	}
 	
-	puts "2D GRID GENERATED FOR LEVEL $res_lev."
+		puts "info: NATIVE FORMAT: $gridname.pw SAVED IN GRID DIR."
+	}
 
 }
 
@@ -1495,13 +1514,16 @@ if {[string compare $model_Q2D YES]==0} {
 		$domtrn end
 	} else {
 		$domtrn run [expr $span_dimension-1]
+		if {[string compare [lindex [$domtrn getRunResult] 0] Completed]!=0} {
+			puts "TRANSLATE EXTRUSION FAILED! PLEASE TRUN ON THE GLOBAL SMOOTHER WITH PROPER NUMBER OF ITERATIONS TO PREVENT THIS!"
+			$domtrn end
+			break
+		}
 		$domtrn end
 	}
 	
 	pw::Entity transform [pwu::Transform rotation -anchor {0 0 0} {1 0 0} 90] [pw::Grid getAll]
 	pw::Display hideAllLayers
-	
-	puts "QUASI 2D GRID GENERATED FOR LEVEL $res_lev."
 	
 	#assigning BCs
 	#CAE Boundary Condition
@@ -1795,6 +1817,24 @@ if {[string compare $model_Q2D YES]==0} {
 		$bcfar apply [list [list $block $domain]]
 	}
 	
+	set wsf_surfaces [pw::Collection create]
+	$wsf_surfaces set [list {*}$domwingqbc {*}$domslatqbc {*}$domflapqbc]
+	$wsf_surfaces do setLayer 30
+	
+	if {[string compare $POLY_DEG Q1]!=0} {
+		pw::Display setCurrentLayer 10
+		set tmp_model [pw::Application begin DatabaseImport]
+		  $tmp_model initialize -strict -type Automatic $geoDir/crmhl2dcut_extr.iges
+		  $tmp_model read
+		  $tmp_model convert
+		$tmp_model end
+		unset tmp_model
+		
+		set dq_database [pw::Layer getLayerEntities -type pw::Quilt 10]
+		
+		pw::Entity project -type ClosestPoint [list {*}$domwingqbc {*}$domslatqbc {*}$domflapqbc] $dq_database
+	}
+	
 	#examine
 	set blkexm [pw::Examine create BlockVolume]
 	$blkexm addEntity $blk
@@ -1812,7 +1852,9 @@ if {[string compare $model_Q2D YES]==0} {
 		set blkID "[string range $blkncell 0 2]k"
 	} elseif {$blkorder>=7 && $blkorder<10} {
 		set blkID "[string range [expr $blkncell/1000000] 0 2]m[string range [expr int($blkncell%1000000)] 0 2]k"
-	}
+	} elseif {$blkorder>=10 && $blkorder<13} {
+		set blkID "[string range [expr $blkncell/1000000000] 0 2]b[string range [expr int($blkncell%1000000000)] 0 2]m"
+}
 
 	append 3dgridname lev $res_lev "_" $blkID
 	
@@ -1822,6 +1864,10 @@ if {[string compare $model_Q2D YES]==0} {
 	puts $fexmod "total blocks: [llength $blkncells]"
 	puts $fexmod "total cells: $blkncell cells"
 	puts $fexmod "min volume: [format "%*e" 5 $blkexmv]"
+	
+	puts $symsepdd
+	puts "QUASI 2D GRID GENERATED FOR LEVEL $res_lev | TOTAL CELLS: $blkncell HEX"
+	puts $symsepdd
 	
 	if {[string compare $cae_export YES]==0} {
 		# creating export directory
@@ -1854,7 +1900,6 @@ if {[string compare $model_Q2D YES]==0} {
 		if { ![$caex initialize $dest] } {
 			puts $fexmod {$caex initialize failed!}
 		} else {
-			set dashes [string repeat - 50]
 			if { ![catch {$caex setAttribute FilePrecision Double}] } {
 				puts $fexmod "setAttribute FilePrecision Double"
 			}
@@ -1885,12 +1930,16 @@ if {[string compare $model_Q2D YES]==0} {
 		}
 		# abort/end the CaeExport mode
 		$caex $status
+	
+		puts "info: QUASI 2D GRID: $3dgridname.$defExt EXPORTED IN GRID DIR."
 	}
 
 	if {[string compare $save_native YES]==0} {
 		set exportDir [file join $scriptDir grids/2dquasi]
 		file mkdir $exportDir
 		pw::Application save "$exportDir/$3dgridname.pw"
+		
+		puts "info: NATIVE FORMAT: $3dgridname.pw SAVED IN GRID DIR."
 	}
 }
 
@@ -1904,3 +1953,8 @@ puts $fexmod [string repeat - 50]
 puts $fexmod "runtime: $tmin min $tsec sec $tmsec ms" 
 puts $fexmod [string repeat - 50]
 close $fexmod
+
+puts $dashes
+puts "GRID INFO WRITTEN TO output.txt"
+puts $symsep
+puts "COMPLETE!"
