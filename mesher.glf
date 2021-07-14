@@ -42,13 +42,13 @@ set lsmthiter 2000
 #GROWTH RATIOS:
 #--------------------------------------------
 #General chordwise growth ratio for node distribution over the wing, flap, and slat.
-set srfgr 1.15
+set srfgr 1.25
 
 #chordwise growth ratio for node distribution over the wing's lower surface.
-set srfgrwl 1.1
+set srfgrwl 1.2
 
 #chordwise growth ratio for node distribution over the slat's upper surface.
-set srfgrfu 1.18
+set srfgrfu 1.2
 
 #GRID DIMENSION:
 #--------------------------------------------
@@ -66,7 +66,7 @@ set fixed_snodes YES
 
 # Number of points in spanwise direction. This parameter will be ignored
 # if you opted NO above and set automatically based on maximum spacing over wing, slat and flap.
-set span_dimension 3
+set span_dimension 4
 
 #CAE EXPORT:
 #--------------------------------------------

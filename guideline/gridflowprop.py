@@ -10,7 +10,7 @@ Path(f"{dirname}").mkdir(parents=True, exist_ok=True)
 #----------------------------GRID GUIDELINE--------------------
 
 #TARGET Y PLUS FOR RANS AND HYBRID RANS/LES
-TARG_YPR = [0.25,0.35,0.5,0.7,1.0,1.4,5.0]
+TARG_YPR = [0.25,0.35,0.5,0.7,1.0,1.4,2.0]
 
 #BOUNDARY BLOCK CELL GROWTH RATE
 TARG_GR=[1.03,1.04,1.06,1.08,1.12,1.17,1.25]
@@ -44,10 +44,10 @@ EXTR_STP=[150,120,100,80,60,40,30]
 HO_GRID = "YES"
 
 #TARGET Y PLUS FOR HIGH ORDER DISCRETIZATION
-TARG_YPH = [0.25,0.35,0.5,0.7,1.0,1.4,5.0]
+TARG_YPH = [0.25,0.35,0.5,0.7,1.0,1.4,50.0]
 
 #BOUNDARY BLOCK CELL GROWTH RATE FOR HIGH ORDER DISCRETIZATION
-TARG_GRH=[1.03,1.04,1.06,1.08,1.12,1.17,1.25]
+TARG_GRH=[1.03,1.04,1.06,1.08,1.12,1.17,1.20]
 
 #====================================================================
 
