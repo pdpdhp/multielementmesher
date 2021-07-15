@@ -3,45 +3,39 @@
 
 These scripts written to generate structured multi-block grid on the CRM high-lift 2D wing section. In overall, seven refinement levels are defined based on the flow properties and grid guideline specifications, both are included in the script's directory.
 
-### Scripts
-topoprepare.glf:
+#### guideline script
+guideline/gridflowprop.py : It is a python script, generatin grid properties based on target y+, growth rate, chordwise spacing, TE spacing ratio, TE number of points, explicit, implicit, and volume factors for normal extrusion and extrusion steps.
 
-divides the domain and prepare the multi-element configuration.
+This script generates grid_specification.txt and flow_propertise.txt
 
-mesher.glf:
+options:
 
-generates the mesh and calls the extrusion.glf. 
+HO = (YES/NO)
 
-extrusion.glf:
+If YES generates a separate grid specification file to be used later by the mesher.glf. 
 
-extrude from first layer till gets to the c-topology.
+#### PW scripts:
 
-smoother.glf:
+mesher.glf: Generates the mesh and calls the extrusion.glf. 
 
-runs the elliptic solver over domains.
+topoprepare.glf: Divides the domain and prepare the multi-element configuration.
 
-output.txt:
+extrusion.glf: Extrude from first layer till gets to the c-topology.
 
-provides summary info including number of domains, number of cells, minimum area, minimum volume, script's run-time and CAE export.
+smoother.glf: Runs the elliptic solver over domains.
 
-grid_specification.txt:
+output.txt: Provides summary info including number of domains, number of cells, minimum area, minimum volume, script's run-time and CAE export.
 
-provides grid guideline specifications to generate the multi-block structured grid.
+#### Options
 
-flow_propertise.txt:
-
-includes flow condition specifications.
-
-### Parameters
-
-These parameters on the top of the mesher.glf can be used to customize the grid:
+These parameters on the top of the mesher.glf can be adjusted for the grid generation:
 
 ```Tcl
 #GRID REFINEMENT LEVEL:
 #--------------------------------------------
-#Grid Levels vary from the first line of the grid_specification.txt to the last line as the coarsest level!
-#Default values from 6 to 0!
-set res_lev 5
+#Grid Levels vary from the first line of the grid_specification.txt to the last line!
+#Default values from 6 to 0! Last line is level 6 and the coarsest!
+set res_lev 6
 
 #GLOBAL AND LOCAL SMOOTHER:
 #--------------------------------------------
@@ -62,42 +56,48 @@ set lsmthiter 2000
 #GROWTH RATIOS:
 #--------------------------------------------
 #General chordwise growth ratio for node distribution over the wing, flap, and slat.
-set srfgr 1.15
+set srfgr 1.25
 
 #chordwise growth ratio for node distribution over the wing's lower surface.
-set srfgrwl 1.1
+set srfgrwl 1.2
 
 #chordwise growth ratio for node distribution over the slat's upper surface.
-set srfgrfu 1.18
+set srfgrfu 1.2
 
 #GRID DIMENSION:
 #--------------------------------------------
-# 2D DIMENSIONAL MESH. (YES/NO)
+# 2D DIMENSIONAL MESH (YES/NO)
 set model_2D YES
 
-# QUASI 2D MESH. (YES/NO)
-set model_Q2D YES
+# QUASI 2D MESH (YES/NO)
+set model_Q2D NO
 
-# span dimension for quasi 2d model in -Y direction
+# Span dimension for quasi 2d model in -Y direction (max 3.0)
 set span 1.0
 
-# Fix number of points in spanwise direction? if YES, indicate number of points below. (YES/NO)
+# Fix number of points in spanwise direction? If YES, indicate number of points below. (YES/NO)
 set fixed_snodes YES
 
 # Number of points in spanwise direction. This parameter will be ignored
-# if you opted NO above and set automatically based on maximum spacing over wing, slat and flap.
-set span_dimension 10
+# If you opt NO above, this is set automatically based on maximum spacing over wing, slat and flap.
+set span_dimension 4
 
 #CAE EXPORT:
 #--------------------------------------------
-#CAE solver selection. (Exp. SU2 or CGNS)
+#CAE SOLVER SELECTION. (Exp. SU2 or CGNS)
 set cae_solver CGNS
 
-#enables CAE export (YES/NO)
-set cae_export YES
+#HIGH ORDER DESCRETIZATION EXPORT POLYNOMIAL DEGREE (Q1:Linear - Q4:quartic) | FOR SU2 ONLY Q1
+set POLY_DEG Q1
 
-#saves the native format (YES/NO)
-set save_native YES
+#USING HIGH ORDER DESCRETIZATION GRID GUIDELINE SPECIFICATION IN GUIDELINE DIR (YES/NO)
+set HO_GEN NO
+
+#ENABLES CAE EXPORT (YES/NO)
+set cae_export NO
+
+#SAVES NATIVE FORMATS (YES/NO)
+set save_native NO
 
 #INITIAL GROWTH RATIOS FOR NODE DISTRIBUTION:
 #--------------------------------------------

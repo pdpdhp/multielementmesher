@@ -19,8 +19,8 @@ set airfoil CRMHL-2D
 
 #GRID REFINEMENT LEVEL:
 #--------------------------------------------
-#Grid Levels vary from the first line of the grid_specification.txt to the last line as the coarsest level!
-#Default values from 6 to 0!
+#Grid Levels vary from the first line of the grid_specification.txt to the last line!
+#Default values from 6 to 0! Last line is level 6 and the coarsest!
 set res_lev 6
 
 #GLOBAL AND LOCAL SMOOTHER:
@@ -30,7 +30,7 @@ set global_smth YES
 
 # number of iterations to run the global elliptic solver.
 # (>1000 Recommended)
-set gsmthiter 1300
+set gsmthiter 3000
 
 # running structured elliptic solver over local domains only if global is switched off (e.g. near the configuration) (YES/NO)
 set local_smth NO
@@ -52,38 +52,38 @@ set srfgrfu 1.2
 
 #GRID DIMENSION:
 #--------------------------------------------
-# 2D DIMENSIONAL MESH. (YES/NO)
+# 2D DIMENSIONAL MESH (YES/NO)
 set model_2D YES
 
-# QUASI 2D MESH. (YES/NO)
-set model_Q2D YES
+# QUASI 2D MESH (YES/NO)
+set model_Q2D NO
 
-# span dimension for quasi 2d model in -Y direction (max 3.0)
+# Span dimension for quasi 2d model in -Y direction (max 3.0)
 set span 1.0
 
-# Fix number of points in spanwise direction? if YES, indicate number of points below. (YES/NO)
+# Fix number of points in spanwise direction? If YES, indicate number of points below. (YES/NO)
 set fixed_snodes YES
 
 # Number of points in spanwise direction. This parameter will be ignored
-# if you opted NO above and set automatically based on maximum spacing over wing, slat and flap.
+# If you opt NO above, this is set automatically based on maximum spacing over wing, slat and flap.
 set span_dimension 4
 
 #CAE EXPORT:
 #--------------------------------------------
-#CAE solver selection. (Exp. SU2 or CGNS)
+#CAE SOLVER SELECTION. (Exp. SU2 or CGNS)
 set cae_solver CGNS
 
-#HIGH ORDER DESCRETIZATION EXPORT POLYNOMIAL DEGREE (Q1:Linear - Q4:quartic)
-set POLY_DEG Q2
+#HIGH ORDER DESCRETIZATION EXPORT POLYNOMIAL DEGREE (Q1:Linear - Q4:quartic) | FOR SU2 ONLY Q1
+set POLY_DEG Q1
 
-#USING HIGH ORDER DESCRETIZATION GUIDELINE SEPARATELY (YES/NO)
-set HO_GEN YES
+#USING HIGH ORDER DESCRETIZATION GRID GUIDELINE SPECIFICATION IN GUIDELINE DIR (YES/NO)
+set HO_GEN NO
 
-#enables CAE export (YES/NO)
+#ENABLES CAE EXPORT (YES/NO)
 set cae_export NO
 
-#saves the native format (YES/NO)
-set save_native YES
+#SAVES NATIVE FORMATS (YES/NO)
+set save_native NO
 
 #INITIAL GROWTH RATIOS FOR NODE DISTRIBUTION:
 #--------------------------------------------
