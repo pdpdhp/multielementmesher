@@ -21,7 +21,23 @@ set airfoil CRMHL-2D
 #--------------------------------------------
 #Grid Levels vary from the first line of the grid_specification.txt to the last line!
 #Default values from 6 to 0! Last line is level 6 and the coarsest!
-set res_lev 6
+set res_lev 3
+
+#GRID SYSTEM: STRUCTURED OR UNSTRUCTRED
+#--------------------------------------------
+#PLEASE SELECT GRID TYPE: STR | UNSTR
+set GRD_TYP UNSTR
+
+#UNSTRUCTRED GRID PROPERTIES
+#--------------------------------------------
+#UNSTRUCTURED SOLVER ALGORITHM: AdvancingFront | AdvancingFrontOrtho | Delaunay
+set UNS_ALG AdvancingFrontOrtho
+
+#UNSTRUCTRED SOLVER CELL TYPE: TriangleQuad | Triangle
+set UNS_CTYP TriangleQuad
+
+#SIZE FIELD DECAY FACTOR FOR UNSTRUCTRED SOLVER
+set SIZE_DCY 0.65
 
 #GLOBAL AND LOCAL SMOOTHER:
 #--------------------------------------------
@@ -56,7 +72,7 @@ set srfgrfu 1.2
 set model_2D YES
 
 #QUASI 2D MESH (YES/NO)
-set model_Q2D YES
+set model_Q2D NO
 
 #Span dimension for quasi 2d model in -Y direction (max 3.0)
 set span 1.0
@@ -77,7 +93,7 @@ set cae_solver CGNS
 set POLY_DEG Q2
 
 #USING HIGH ORDER DESCRETIZATION GRID GUIDELINE SPECIFICATION IN GUIDELINE DIR (YES/NO)
-set HO_GEN YES
+set HO_GEN NO
 
 #ENABLES CAE EXPORT (YES/NO)
 set cae_export NO
@@ -1295,7 +1311,8 @@ lappend adjbcs 1
 
 #=========================================================solve domains======================================
 # running structured solver over structured domains surrounding the configuration -- local_smth turns it off!
-if {[string compare $local_smth YES]==0 && [string compare $global_smth NO]==0} {
+if {[string compare $local_smth YES]==0 && [string compare $GRD_TYP STR]==0 && \
+							[string compare $global_smth NO]==0} {
 	set dsolve [pw::Application begin EllipticSolver $doms]
 	set dom_dsolve []
 	set bc_dsolve []
@@ -1337,6 +1354,109 @@ if {[string compare $local_smth YES]==0 && [string compare $global_smth NO]==0} 
 #=====================================================OUTTER DOMAIN EXTRUSION====================================
 
 source [file join $scriptDir "extrusion.glf"]
+
+
+if {[string compare $GRD_TYP UNSTR]==0} {
+	pw::Display setCurrentLayer 40
+	
+	set diagcol [pw::Collection create]
+	$diagcol set $smthd
+	set diag [pw::Application begin Create]
+	set triandoms [$diagcol do triangulate Initialized]
+	$diag end
+	pw::Entity delete $smthd
+	
+	set smthd [pw::Grid getAll -type pw::DomainUnstructured]
+	
+	set flaptail [pw::Examine create ConnectorEdgeLength]
+	$flaptail addEntity $confu2_con
+	$flaptail examine
+	set flaptailv [$flaptail getValue $confu2_con [expr [$confu2_con getDimension]-1]]
+	
+	set fronttail [pw::Examine create ConnectorEdgeLength]
+	$fronttail addEntity [[[lindex $smthd 8] getEdge 1] getConnector 1]
+	$fronttail examine
+	set fronttailv [$fronttail getValue [[[lindex $smthd 8] getEdge 1] getConnector 1] 1]
+	
+	set downstreamcons []
+	lappend downstreamcons [[[lindex $smthd 1] getEdge 1] getConnector 5]
+	lappend downstreamcons [[[lindex $smthd 2] getEdge 1] getConnector 3]
+	lappend downstreamcons [[[lindex $smthd 8] getEdge 1] getConnector 3]
+	
+	foreach cons $downstreamcons {
+		$cons setDimensionFromSpacing $flaptailv
+		$cons replaceDistribution 1 [pw::DistributionTanh create]
+		[$cons getDistribution 1] setBeginSpacing 0.0
+		[$cons getDistribution 1] setEndSpacing 0.0
+	}
+	 
+	set upstreamcons []
+	lappend upstreamcons [[[lindex $smthd 2] getEdge 1] getConnector 4]
+	lappend upstreamcons [[[lindex $smthd 3] getEdge 1] getConnector 4]
+	lappend upstreamcons [[[lindex $smthd 4] getEdge 1] getConnector 8]
+	lappend upstreamcons [[[lindex $smthd 5] getEdge 1] getConnector 4]
+	lappend upstreamcons [[[lindex $smthd 6] getEdge 1] getConnector 4]
+	lappend upstreamcons [[[lindex $smthd 7] getEdge 1] getConnector 4]
+	lappend upstreamcons [[[lindex $smthd 8] getEdge 1] getConnector 2]
+	
+	foreach cons $upstreamcons {
+		$cons setDimensionFromSpacing $fronttailv
+		$cons replaceDistribution 1 [pw::DistributionTanh create]
+		[$cons getDistribution 1] setBeginSpacing 0.0
+		[$cons getDistribution 1] setEndSpacing 0.0
+	}
+
+	[[lindex $upstreamcons 0] getDistribution 1] setBeginSpacing $flaptailv
+	[[lindex $upstreamcons 0] getDistribution 1] setEndSpacing $fronttailv
+	[lindex $upstreamcons 0] setSubConnectorDimensionFromDistribution 1
+	
+	[[lindex $upstreamcons 6] getDistribution 1] setBeginSpacing $flaptailv
+	[[lindex $upstreamcons 6] getDistribution 1] setEndSpacing $fronttailv
+	[lindex $upstreamcons 6] setSubConnectorDimensionFromDistribution 1
+	
+	#size field defination
+	set radius [list 1.5 3.5 5.5 7.5 11.5]
+	
+	set levspc [expr [$wu getAverageSpacing]*2]
+	
+	for {set i 0} {$i<6} {incr i} {
+		lappend spcfactor [expr $levspc*($i*3+1)]
+		lappend decayfactor [expr 0.8-(0.15*$i)]
+	}
+	
+	for {set i 0} {$i<5} {incr i} {
+		lappend sourcesh [pw::SourceShape create]
+		[lindex $sourcesh $i] cylinder -radius [lindex $radius $i] -length 0
+
+		[lindex $sourcesh $i] setTransform [list 1 -0 0 0 0 1 0 0 -0 -0 1 0 0.5 0 0 1]
+		[lindex $sourcesh $i] setPivot Base
+		[lindex $sourcesh $i] setSectionMinimum 0
+		[lindex $sourcesh $i] setSectionMaximum 360
+		[lindex $sourcesh $i] setSidesType Plane
+		[lindex $sourcesh $i] setBaseType Plane
+		[lindex $sourcesh $i] setTopType Plane
+		[lindex $sourcesh $i] setEnclosingEntities {}
+		[lindex $sourcesh $i] setSpecificationType AxisToPerimeter
+		[lindex $sourcesh $i] setBeginSpacing [lindex $spcfactor $i]
+		[lindex $sourcesh $i] setBeginDecay [lindex $decayfactor $i]
+		[lindex $sourcesh $i] setEndSpacing [lindex $spcfactor [expr $i+1]]
+		[lindex $sourcesh $i] setEndDecay [lindex $decayfactor [expr $i+1]]
+	}
+	
+	set unstrsolve [pw::Application begin UnstructuredSolver $smthd]
+	
+	foreach dom $smthd {
+		$dom setSizeFieldDecay $SIZE_DCY
+	}
+	
+	set UnsCol [pw::Collection create]
+	$UnsCol set $smthd
+	$UnsCol do setUnstructuredSolverAttribute Algorithm $UNS_ALG
+	$UnsCol do setUnstructuredSolverAttribute IsoCellType $UNS_CTYP
+	$unstrsolve run Initialize
+	$unstrsolve end
+}
+
 
 #=================================================CAE Export--=====================================================
 
@@ -1482,9 +1602,9 @@ if {[string compare $model_Q2D YES]==0} {
 	pw::Application setCAESolver $cae_solver 3
 
 	#grid tolerance
-	pw::Grid setNodeTolerance 1.0e-7
-	pw::Grid setConnectorTolerance 1.0e-7
-	pw::Grid setGridPointTolerance 1.0e-7
+	pw::Grid setNodeTolerance 1.0e-10
+	pw::Grid setConnectorTolerance 1.0e-10
+	pw::Grid setGridPointTolerance 1.0e-10
 	
 	set fstr [pw::FaceStructured createFromDomains $alldoms]
 	
