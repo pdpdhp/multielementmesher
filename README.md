@@ -8,7 +8,7 @@ guideline/gridflowprop.py : It is a python script, generatin grid properties bas
 
 This script generates grid_specification.txt and flow_propertise.txt
 
-#### options:
+#### Options:
 
 HO = (YES/NO)
 
