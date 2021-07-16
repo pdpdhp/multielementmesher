@@ -13,7 +13,6 @@
 #
 #==============================================================
 
-
 package require PWI_Glyph 3.18.3
 
 pw::Application reset
@@ -56,7 +55,8 @@ set confarbc []
 set domfarbc []
 
 if {[string compare $airfoil CRMHL-2D]==0} {
-	puts "STRUCTURED MULTIBLOCK GRID | 2D CRM-HL WING SECTION."
+	puts "STRUCTURED MULTIBLOCK GRID | 2D CRM-HL WING SECTION IMPORTED."
+	puts $symsepdd
 } elseif {[string compare $airfoil 30P30N]==0} {
 	puts "2-D 30P-30N MULTI-ELEMENT AIRFOIL: this part hasn't finished yet, please switch to CRMHL-2D!"
 	break
@@ -97,7 +97,7 @@ if {[string compare $airfoil CRMHL-2D]==0} {
 set allquilts [pw::Database getAll -type pw::Quilt]
 set allmodels [pw::Database getAll -type pw::Model]
 set alldegs [pw::Database getAll -type pw::Curve]
-	
+
 set slatcons [list [lindex $alldegs 9] [lindex $alldegs 8]]
 pw::Curve join $slatcons
 
@@ -447,6 +447,12 @@ $lowsrf0 setEndRate $laySpcGR
 
 set con_alsp_sp [[lindex $con_alsp 1] split -I [list [lindex [[lindex $con_alsp 1] closestCoordinate [[lindex $con_alsp 1] getPosition -arc 0.9975]] 0]]]
 
+if {[string compare $HO_GEN YES]==0} {
+	set maxGRextr 0.0
+} else {
+	set maxGRextr 0.0004
+}
+
 #airfoil BL extrusion
 set a_edge [pw::Edge createFromConnectors [list $wu [lindex $con_alsp 0] [lindex $con_alsp_sp 1] [lindex $con_alsp_sp 0] $wc $wte]]
 set a_dom [pw::DomainStructured create]
@@ -455,7 +461,7 @@ set a_extrusion [pw::Application begin ExtrusionSolver [list $a_dom]]
 $a_dom setExtrusionSolverAttribute NormalMarchingVector {0 0 -1}
 $a_dom setExtrusionSolverAttribute NormalInitialStepSize $dsg
 $a_dom setExtrusionSolverAttribute SpacingGrowthFactor $grg
-$a_dom setExtrusionSolverAttribute NormalMaximumStepSize 0.0004
+$a_dom setExtrusionSolverAttribute NormalMaximumStepSize $maxGRextr
 $a_dom setExtrusionSolverAttribute Mode NormalHyperbolic
 $a_dom setExtrusionSolverAttribute StopAtHeight 0.005
 $a_dom setExtrusionSolverAttribute NormalExplicitSmoothing $exp_sg
@@ -474,7 +480,7 @@ set s_extrusion [pw::Application begin ExtrusionSolver [list $s_dom]]
 $s_dom setExtrusionSolverAttribute NormalMarchingVector {0 0 -1}
 $s_dom setExtrusionSolverAttribute NormalInitialStepSize $dsg
 $s_dom setExtrusionSolverAttribute SpacingGrowthFactor $grg
-$s_dom setExtrusionSolverAttribute NormalMaximumStepSize 0.0004
+$s_dom setExtrusionSolverAttribute NormalMaximumStepSize $maxGRextr
 $s_dom setExtrusionSolverAttribute Mode NormalHyperbolic
 $s_dom setExtrusionSolverAttribute StopAtHeight 0.005
 $s_dom setExtrusionSolverAttribute NormalExplicitSmoothing $exp_sg
@@ -565,7 +571,7 @@ set f_extrusion [pw::Application begin ExtrusionSolver [list $f_dom]]
 $f_dom setExtrusionSolverAttribute NormalMarchingVector {0 0 -1}
 $f_dom setExtrusionSolverAttribute NormalInitialStepSize $dsg
 $f_dom setExtrusionSolverAttribute SpacingGrowthFactor $grg
-$f_dom setExtrusionSolverAttribute NormalMaximumStepSize 0.0004
+$f_dom setExtrusionSolverAttribute NormalMaximumStepSize $maxGRextr
 $f_dom setExtrusionSolverAttribute Mode NormalHyperbolic
 $f_dom setExtrusionSolverAttribute StopAtHeight 0.005
 $f_dom setExtrusionSolverAttribute NormalExplicitSmoothing $exp_sg

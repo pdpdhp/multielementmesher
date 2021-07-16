@@ -1,5 +1,11 @@
 import numpy as np
-import matplotlib as mpl
+import math
+from pathlib import Path
+
+import os
+dirname = os.path.dirname(os.path.realpath(__file__))
+
+Path(f"{dirname}").mkdir(parents=True, exist_ok=True)
 
 #----------------------------GRID GUIDELINE--------------------
 
@@ -13,7 +19,7 @@ TARG_GR=[1.03,1.04,1.06,1.08,1.12,1.17,1.25]
 CHR_SPC = [0.0002,0.00066,0.001,0.00125,0.002,0.003,0.0045]
 
 # TRAILING EDGE SPACING RATIO ACCORDING TO GRID GUIDELINE
-TE_SRT = [7.5e-06,1.5e-05,3.0e-05,0.6e-04,1.2e-04,2.5e-04,5e-04]
+TE_SRT = [7.5e-06,1.5e-05,3.0e-05,0.6e-04,1.2e-04,2.5e-04,5.0e-04]
 
 # TRAILING EDGE NUMBER OF POINTS ACCORDING TO GRID GUIDELINE
 TE_PT1 = [640,320,160,80,40,20,10]
@@ -38,10 +44,10 @@ EXTR_STP=[150,120,100,80,60,40,30]
 HO_GRID = "YES"
 
 #TARGET Y PLUS FOR HIGH ORDER DISCRETIZATION
-TARG_YPH = [0.25,0.35,0.5,0.7,1.0,1.4,2.0]
+TARG_YPH = [0.25,0.35,0.5,0.7,1.0,1.4,50.0]
 
 #BOUNDARY BLOCK CELL GROWTH RATE FOR HIGH ORDER DISCRETIZATION
-TARG_GRH=[1.03,1.04,1.06,1.08,1.12,1.17,1.25]
+TARG_GRH=[1.03,1.04,1.06,1.08,1.12,1.17,1.20]
 
 #====================================================================
 
@@ -187,7 +193,7 @@ flow_spec_us=np.array([Res,D_inch,P_psi,T,ros_lbinch3,M])
 
 #------------writing files---------------------
 # grid propertise metric
-f = open('grid_specification_metric.txt', 'w')
+f = open(f'{dirname}/grid_specification_metric.txt', 'w')
 f.write("%7s %17s %9s %16s %7s %10s %4s %4s %9s %10s %10s %6s\n" % ("Y+","Delta_S(m)","GR","C_Spacing(m)","TE Ratio","LE Ratio","TE1","TE2","ExpExtr","ImpExtr","VolExtr","NExtr"))
 
 for i in range(NUM_LEVR):
@@ -195,7 +201,7 @@ for i in range(NUM_LEVR):
     								grid_spec[i,3],grid_spec[i,4],grid_spec[i,5],grid_spec[i,6],grid_spec[i,7],grid_spec[i,8],grid_spec[i,9],grid_spec[i,10],grid_spec[i,11]))
 f.close()
 
-f = open('grid_specification_inch.txt', 'w')
+f = open(f'{dirname}/grid_specification_inch.txt', 'w')
 f.write("%7s %17s %9s %16s %7s %10s %4s %4s %9s %10s %10s %6s\n" % ("Y+","Delta_S(in)","GR","C_Spacing(in)","TE Ratio","LE Ratio","TE1","TE2","ExpExtr","ImpExtr","VolExtr","NExtr"))
 
 for i in range(NUM_LEVR):
@@ -203,14 +209,14 @@ for i in range(NUM_LEVR):
     								grid_spec_inch[i,3],grid_spec_inch[i,4],grid_spec_inch[i,5],grid_spec_inch[i,6],grid_spec_inch[i,7],grid_spec_inch[i,8],grid_spec_inch[i,9],grid_spec_inch[i,10],grid_spec_inch[i,11]))
 f.close()
 
-f = open('flow_propertise_si.txt', 'w')
+f = open(f'{dirname}/flow_propertise_si.txt', 'w')
 f.write("%10s %14s %12s %12s %20s %10s \n" % ("Reynolds","Ref_chord(m)","Pressure(Pa)","Temp(K)","Density(Kg/m3)","Mach"))
 
 f.write("%1.5e  %1.5e %1.7e  %1.7e %1.15e  %1.5e\r\n" % (flow_spec_si[0],flow_spec_si[1],\
 								flow_spec_si[2],flow_spec_si[3],flow_spec_si[4],flow_spec_si[5]))
 f.close()
 
-f = open('flow_propertise_us.txt', 'w')
+f = open(f'{dirname}/flow_propertise_us.txt', 'w')
 f.write("%10s %17s %15s %11s %22s %10s \n" % ("Reynolds","Ref_chord(inch)","Pressure(psi)","Temp(K)","Density(lb/inch3)","Mach"))
 
 f.write("%1.5e  %1.9e   %1.7e  %1.7e %1.15e  %1.5e\r\n" % (flow_spec_us[0],flow_spec_us[1],\
@@ -219,7 +225,7 @@ f.close()
 
 
 if HO_GRID == "YES":
-	f = open('grid_specification_HO.txt', 'w')
+	f = open(f'{dirname}/grid_specification_HO.txt', 'w')
 	f.write("%7s %17s %9s %16s %7s %10s %4s %4s %9s %10s %10s %6s\n" % ("Y+","Delta_S(in)","GR","C_Spacing(in)","TE Ratio","LE Ratio","TE1","TE2","ExpExtr","ImpExtr","VolExtr","NExtr"))
 	for i in range(NUM_LEVH):
 	    f.write(" % 1.3e  % 1.7e % 1.3e  % 1.3e % 1.3e % 1.3e % 4d % 4d % 1.3e % 1.3e % 1.3e % 3d\n" % (grid_spec_ho[i,0],grid_spec_ho[i,1],grid_spec_ho[i,2],\

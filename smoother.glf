@@ -19,7 +19,7 @@ set scriptDir [file dirname [info script]]
 
 # running elliptic solver over domains surrounding the configuration
 
-if {[string compare $global_smth YES]==0} {
+if {[string compare $global_smth YES]==0 && [string compare $GRD_TYP STR]==0} {
 
 	set smth1 [pw::Application begin EllipticSolver $smthd]
 
@@ -42,7 +42,9 @@ if {[string compare $global_smth YES]==0} {
 
 	$smth1 run $gsmthiter
 	$smth1 end
-
+	
+	puts $symsepdd
 	puts "GLOBAL ELLIPTIC SOLVER FINISHED $gsmthiter ITERATIONS OVER [llength $smthd] STRUCTURED DOMAINS."
+	puts $symsepdd
 }
 

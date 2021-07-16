@@ -11,8 +11,6 @@
 
 package require PWI_Glyph 3.18.3
 
-set scriptDir [file dirname [info script]]
-
 #MULTI-ELEMENT CONFIGURATION:
 #--------------------------------------------
 #multi-element airfoil selection (CRMHL-2D or 30P30N)
@@ -21,9 +19,25 @@ set airfoil CRMHL-2D
 
 #GRID REFINEMENT LEVEL:
 #--------------------------------------------
-#Grid Levels vary from the first line of the grid_specification.txt to the last line as the coarsest level!
-#Default values from 6 to 0!
-set res_lev 6
+#Grid Levels vary from the first line of the grid_specification.txt to the last line!
+#Default values from 6 to 0! Last line is level 6 and the coarsest!
+set res_lev 3
+
+#GRID SYSTEM: STRUCTURED OR UNSTRUCTRED
+#--------------------------------------------
+#PLEASE SELECT GRID TYPE: STR | UNSTR
+set GRD_TYP UNSTR
+
+#UNSTRUCTRED GRID PROPERTIES
+#--------------------------------------------
+#UNSTRUCTURED SOLVER ALGORITHM: AdvancingFront | AdvancingFrontOrtho | Delaunay
+set UNS_ALG AdvancingFrontOrtho
+
+#UNSTRUCTRED SOLVER CELL TYPE: TriangleQuad | Triangle
+set UNS_CTYP TriangleQuad
+
+#SIZE FIELD DECAY FACTOR FOR UNSTRUCTRED SOLVER
+set SIZE_DCY 0.65
 
 #GLOBAL AND LOCAL SMOOTHER:
 #--------------------------------------------
@@ -44,48 +58,48 @@ set lsmthiter 2000
 #GROWTH RATIOS:
 #--------------------------------------------
 #General chordwise growth ratio for node distribution over the wing, flap, and slat.
-set srfgr 1.15
+set srfgr 1.25
 
-#chordwise growth ratio for node distribution over the wing's lower surface.
-set srfgrwl 1.1
+#Chordwise growth ratio for node distribution over the wing's lower surface.
+set srfgrwl 1.2
 
-#chordwise growth ratio for node distribution over the slat's upper surface.
-set srfgrfu 1.18
+#Chordwise growth ratio for node distribution over the slat's upper surface.
+set srfgrfu 1.2
 
 #GRID DIMENSION:
 #--------------------------------------------
-# 2D DIMENSIONAL MESH. (YES/NO)
+#2D DIMENSIONAL MESH (YES/NO)
 set model_2D YES
 
-# QUASI 2D MESH. (YES/NO)
-set model_Q2D YES
+#QUASI 2D MESH (YES/NO)
+set model_Q2D NO
 
-# span dimension for quasi 2d model in -Y direction (max 3.0)
+#Span dimension for quasi 2d model in -Y direction (max 3.0)
 set span 1.0
 
-# Fix number of points in spanwise direction? if YES, indicate number of points below. (YES/NO)
+#Fix number of points in spanwise direction? If YES, indicate number of points below. (YES/NO)
 set fixed_snodes YES
 
-# Number of points in spanwise direction. This parameter will be ignored
-# if you opted NO above and set automatically based on maximum spacing over wing, slat and flap.
-set span_dimension 3
+#Number of points in spanwise direction. This parameter will be ignored
+#If you opt NO above, this is set automatically based on maximum spacing over wing, slat and flap.
+set span_dimension 4
 
 #CAE EXPORT:
 #--------------------------------------------
-#CAE solver selection. (Exp. SU2 or CGNS)
+#CAE SOLVER SELECTION. (Exp. SU2 or CGNS)
 set cae_solver CGNS
 
-#HIGH ORDER DESCRETIZATION EXPORT POLYNOMIAL DEGREE (Q1:Linear - Q4:quartic)
+#HIGH ORDER DESCRETIZATION EXPORT POLYNOMIAL DEGREE (Q1:Linear - Q4:quartic) | FOR SU2 ONLY Q1
 set POLY_DEG Q2
 
-#USING HIGH ORDER DESCRETIZATION GUIDELINE SEPARATELY (YES/NO)
-set HO_GEN YES
+#USING HIGH ORDER DESCRETIZATION GRID GUIDELINE SPECIFICATION IN GUIDELINE DIR (YES/NO)
+set HO_GEN NO
 
-#enables CAE export (YES/NO)
+#ENABLES CAE EXPORT (YES/NO)
 set cae_export NO
 
-#saves the native format (YES/NO)
-set save_native NO
+#SAVES NATIVE FORMATS (YES/NO)
+set save_native YES
 
 #INITIAL GROWTH RATIOS FOR NODE DISTRIBUTION:
 #--------------------------------------------
@@ -100,6 +114,8 @@ set r3c1gr 1.09
 
 ##=============================================================================================================
 #Importing Meshing Guidline generated based on the flow condition!
+
+set scriptDir [file dirname [info script]]
 
 set guidelineDir [file join $scriptDir guideline]
 
@@ -159,12 +175,17 @@ if {$res_lev<$NUM_REF} {
 	set stp_sg [lindex $extr $res_lev]
 } else {
 
-	puts "PLEASE SELECT RIGHT REFINEMENT LEVEL ACCORDING TO YOUR GUIDELINE FILE: res_lev"
+	puts "PLEASE SELECT THE RIGHT REFINEMENT LEVEL ACCORDING TO YOUR GUIDELINE FILE: res_lev"
 	break
 
 }
 
-puts "GRID GUIDELINE: Y+:$ypg Delta_S(m):$dsg GR:$grg Chordwise_Spacing(m):$chord_sg"
+set symsep [string repeat = 88]
+set symsepd [string repeat . 88]
+set symsepdd [string repeat - 88]
+
+puts "GRID GUIDELINE: Y+: $ypg | Delta_S(m): $dsg | GR: $grg | Chordwise_Spacing(m): $chord_sg"
+puts $symsep
 
 set time_start [pwu::Time now]
 
@@ -1290,7 +1311,8 @@ lappend adjbcs 1
 
 #=========================================================solve domains======================================
 # running structured solver over structured domains surrounding the configuration -- local_smth turns it off!
-if {[string compare $local_smth YES]==0 && [string compare $global_smth NO]==0} {
+if {[string compare $local_smth YES]==0 && [string compare $GRD_TYP STR]==0 && \
+							[string compare $global_smth NO]==0} {
 	set dsolve [pw::Application begin EllipticSolver $doms]
 	set dom_dsolve []
 	set bc_dsolve []
@@ -1323,12 +1345,118 @@ if {[string compare $local_smth YES]==0 && [string compare $global_smth NO]==0} 
 	
 	$dsolve run $lsmthiter
 	$dsolve end
+	
+	puts $symsepd
 	puts "LOCAL ELLIPTIC SOLVER FINISHED $lsmthiter ITERATIONS OVER [llength $doms] STRUCTURED DOMAINS"
+	puts $symsepdd
 }
 
 #=====================================================OUTTER DOMAIN EXTRUSION====================================
 
 source [file join $scriptDir "extrusion.glf"]
+
+
+if {[string compare $GRD_TYP UNSTR]==0} {
+	pw::Display setCurrentLayer 40
+	
+	set diagcol [pw::Collection create]
+	$diagcol set $smthd
+	set diag [pw::Application begin Create]
+	set triandoms [$diagcol do triangulate Initialized]
+	$diag end
+	pw::Entity delete $smthd
+	
+	set smthd [pw::Grid getAll -type pw::DomainUnstructured]
+	
+	set flaptail [pw::Examine create ConnectorEdgeLength]
+	$flaptail addEntity $confu2_con
+	$flaptail examine
+	set flaptailv [$flaptail getValue $confu2_con [expr [$confu2_con getDimension]-1]]
+	
+	set fronttail [pw::Examine create ConnectorEdgeLength]
+	$fronttail addEntity [[[lindex $smthd 8] getEdge 1] getConnector 1]
+	$fronttail examine
+	set fronttailv [$fronttail getValue [[[lindex $smthd 8] getEdge 1] getConnector 1] 1]
+	
+	set downstreamcons []
+	lappend downstreamcons [[[lindex $smthd 1] getEdge 1] getConnector 5]
+	lappend downstreamcons [[[lindex $smthd 2] getEdge 1] getConnector 3]
+	lappend downstreamcons [[[lindex $smthd 8] getEdge 1] getConnector 3]
+	
+	foreach cons $downstreamcons {
+		$cons setDimensionFromSpacing $flaptailv
+		$cons replaceDistribution 1 [pw::DistributionTanh create]
+		[$cons getDistribution 1] setBeginSpacing 0.0
+		[$cons getDistribution 1] setEndSpacing 0.0
+	}
+	 
+	set upstreamcons []
+	lappend upstreamcons [[[lindex $smthd 2] getEdge 1] getConnector 4]
+	lappend upstreamcons [[[lindex $smthd 3] getEdge 1] getConnector 4]
+	lappend upstreamcons [[[lindex $smthd 4] getEdge 1] getConnector 8]
+	lappend upstreamcons [[[lindex $smthd 5] getEdge 1] getConnector 4]
+	lappend upstreamcons [[[lindex $smthd 6] getEdge 1] getConnector 4]
+	lappend upstreamcons [[[lindex $smthd 7] getEdge 1] getConnector 4]
+	lappend upstreamcons [[[lindex $smthd 8] getEdge 1] getConnector 2]
+	
+	foreach cons $upstreamcons {
+		$cons setDimensionFromSpacing $fronttailv
+		$cons replaceDistribution 1 [pw::DistributionTanh create]
+		[$cons getDistribution 1] setBeginSpacing 0.0
+		[$cons getDistribution 1] setEndSpacing 0.0
+	}
+
+	[[lindex $upstreamcons 0] getDistribution 1] setBeginSpacing $flaptailv
+	[[lindex $upstreamcons 0] getDistribution 1] setEndSpacing $fronttailv
+	[lindex $upstreamcons 0] setSubConnectorDimensionFromDistribution 1
+	
+	[[lindex $upstreamcons 6] getDistribution 1] setBeginSpacing $flaptailv
+	[[lindex $upstreamcons 6] getDistribution 1] setEndSpacing $fronttailv
+	[lindex $upstreamcons 6] setSubConnectorDimensionFromDistribution 1
+	
+	#size field defination
+	set radius [list 1.5 3.5 5.5 7.5 11.5]
+	
+	set levspc [expr [$wu getAverageSpacing]*2]
+	
+	for {set i 0} {$i<6} {incr i} {
+		lappend spcfactor [expr $levspc*($i*3+1)]
+		lappend decayfactor [expr 0.8-(0.15*$i)]
+	}
+	
+	for {set i 0} {$i<5} {incr i} {
+		lappend sourcesh [pw::SourceShape create]
+		[lindex $sourcesh $i] cylinder -radius [lindex $radius $i] -length 0
+
+		[lindex $sourcesh $i] setTransform [list 1 -0 0 0 0 1 0 0 -0 -0 1 0 0.5 0 0 1]
+		[lindex $sourcesh $i] setPivot Base
+		[lindex $sourcesh $i] setSectionMinimum 0
+		[lindex $sourcesh $i] setSectionMaximum 360
+		[lindex $sourcesh $i] setSidesType Plane
+		[lindex $sourcesh $i] setBaseType Plane
+		[lindex $sourcesh $i] setTopType Plane
+		[lindex $sourcesh $i] setEnclosingEntities {}
+		[lindex $sourcesh $i] setSpecificationType AxisToPerimeter
+		[lindex $sourcesh $i] setBeginSpacing [lindex $spcfactor $i]
+		[lindex $sourcesh $i] setBeginDecay [lindex $decayfactor $i]
+		[lindex $sourcesh $i] setEndSpacing [lindex $spcfactor [expr $i+1]]
+		[lindex $sourcesh $i] setEndDecay [lindex $decayfactor [expr $i+1]]
+	}
+	
+	set unstrsolve [pw::Application begin UnstructuredSolver $smthd]
+	
+	foreach dom $smthd {
+		$dom setSizeFieldDecay $SIZE_DCY
+	}
+	
+	set UnsCol [pw::Collection create]
+	$UnsCol set $smthd
+	$UnsCol do setUnstructuredSolverAttribute Algorithm $UNS_ALG
+	$UnsCol do setUnstructuredSolverAttribute IsoCellType $UNS_CTYP
+	$unstrsolve run Initialize
+	$unstrsolve end
+}
+
 
 #=================================================CAE Export--=====================================================
 
@@ -1346,6 +1474,8 @@ set bcflap [pw::BoundaryCondition create]
 	$bcflap setName flap
 set bcfar [pw::BoundaryCondition create]
 	$bcfar setName farfield
+
+set dashes [string repeat - 50]
 
 if {[string compare $cae_solver CGNS]==0} {
 	pw::Application setCAESolverAttribute ExportPolynomialDegree $POLY_DEG
@@ -1377,7 +1507,9 @@ if {[string compare $model_2D YES]==0} {
 		set gridID "[string range $ncell 0 2]k"
 	} elseif {$gorder>=7 && $gorder<10} {
 		set gridID "[string range [expr $ncell/1000000] 0 2]m[string range [expr int($ncell%1000000)] 0 2]k"
-	}
+	} elseif {$gorder>=10 && $gorder<13} {
+		set gridID "[string range [expr $ncell/1000000000] 0 2]b[string range [expr int($ncell%1000000000)] 0 2]m"
+}
 
 	append gridname lev $res_lev "_" $gridID
 	
@@ -1387,6 +1519,9 @@ if {[string compare $model_2D YES]==0} {
 	puts $fexmod "total domains: [llength $ncells]"
 	puts $fexmod "total cells: $ncell cells"
 	puts $fexmod "min area: [format "%*e" 5 $domexmv]"
+	
+	puts "2D GRID GENERATED FOR LEVEL $res_lev | TOTAL CELLS: $ncell QUADS"
+	puts $symsepdd
 	
 	if {[string compare $cae_export YES]==0} {
 		# creating export directory
@@ -1419,7 +1554,6 @@ if {[string compare $model_2D YES]==0} {
 		if { ![$caex initialize $dest] } {
 			puts $fexmod {$caex initialize failed!}
 		} else {
-			set dashes [string repeat - 50]
 			if { ![catch {$caex setAttribute FilePrecision Double}] } {
 				puts $fexmod "setAttribute FilePrecision Double"
 			}
@@ -1450,15 +1584,17 @@ if {[string compare $model_2D YES]==0} {
 		}
 		# abort/end the CaeExport mode
 		$caex $status
+	
+		puts "info: 2D GRID: $gridname.$defExt EXPORTED IN GRID DIR."
 	}
 
 	if {[string compare $save_native YES]==0} {
 		set exportDir [file join $scriptDir grids/2d]
 		file mkdir $exportDir
 		pw::Application save "$exportDir/$gridname.pw"
-	}
 	
-	puts "2D GRID GENERATED FOR LEVEL $res_lev."
+		puts "info: NATIVE FORMAT: $gridname.pw SAVED IN GRID DIR."
+	}
 
 }
 
@@ -1466,9 +1602,9 @@ if {[string compare $model_Q2D YES]==0} {
 	pw::Application setCAESolver $cae_solver 3
 
 	#grid tolerance
-	pw::Grid setNodeTolerance 1.0e-7
-	pw::Grid setConnectorTolerance 1.0e-7
-	pw::Grid setGridPointTolerance 1.0e-7
+	pw::Grid setNodeTolerance 1.0e-10
+	pw::Grid setConnectorTolerance 1.0e-10
+	pw::Grid setGridPointTolerance 1.0e-10
 	
 	set fstr [pw::FaceStructured createFromDomains $alldoms]
 	
@@ -1508,8 +1644,6 @@ if {[string compare $model_Q2D YES]==0} {
 	
 	pw::Entity transform [pwu::Transform rotation -anchor {0 0 0} {1 0 0} 90] [pw::Grid getAll]
 	pw::Display hideAllLayers
-	
-	puts "QUASI 2D GRID GENERATED FOR LEVEL $res_lev."
 	
 	#assigning BCs
 	#CAE Boundary Condition
@@ -1803,6 +1937,10 @@ if {[string compare $model_Q2D YES]==0} {
 		$bcfar apply [list [list $block $domain]]
 	}
 	
+	set wsf_surfaces [pw::Collection create]
+	$wsf_surfaces set [list {*}$domwingqbc {*}$domslatqbc {*}$domflapqbc]
+	$wsf_surfaces do setLayer 30
+	
 	if {[string compare $POLY_DEG Q1]!=0} {
 		pw::Display setCurrentLayer 10
 		set tmp_model [pw::Application begin DatabaseImport]
@@ -1813,14 +1951,9 @@ if {[string compare $model_Q2D YES]==0} {
 		unset tmp_model
 		
 		set dq_database [pw::Layer getLayerEntities -type pw::Quilt 10]
+		
+		pw::Entity project -type ClosestPoint [list {*}$domwingqbc {*}$domslatqbc {*}$domflapqbc] $dq_database
 	}
-	
-
-	set wsf_surfaces [pw::Collection create]
-	$wsf_surfaces set [list {*}$domwingqbc {*}$domslatqbc {*}$domflapqbc]
-	$wsf_surfaces do setLayer 30
-
-	pw::Entity project -type ClosestPoint [list {*}$domwingqbc {*}$domslatqbc {*}$domflapqbc] $dq_database
 	
 	#examine
 	set blkexm [pw::Examine create BlockVolume]
@@ -1839,7 +1972,9 @@ if {[string compare $model_Q2D YES]==0} {
 		set blkID "[string range $blkncell 0 2]k"
 	} elseif {$blkorder>=7 && $blkorder<10} {
 		set blkID "[string range [expr $blkncell/1000000] 0 2]m[string range [expr int($blkncell%1000000)] 0 2]k"
-	}
+	} elseif {$blkorder>=10 && $blkorder<13} {
+		set blkID "[string range [expr $blkncell/1000000000] 0 2]b[string range [expr int($blkncell%1000000000)] 0 2]m"
+}
 
 	append 3dgridname lev $res_lev "_" $blkID
 	
@@ -1849,6 +1984,10 @@ if {[string compare $model_Q2D YES]==0} {
 	puts $fexmod "total blocks: [llength $blkncells]"
 	puts $fexmod "total cells: $blkncell cells"
 	puts $fexmod "min volume: [format "%*e" 5 $blkexmv]"
+	
+	puts $symsepdd
+	puts "QUASI 2D GRID GENERATED FOR LEVEL $res_lev | TOTAL CELLS: $blkncell HEX"
+	puts $symsepdd
 	
 	if {[string compare $cae_export YES]==0} {
 		# creating export directory
@@ -1881,7 +2020,6 @@ if {[string compare $model_Q2D YES]==0} {
 		if { ![$caex initialize $dest] } {
 			puts $fexmod {$caex initialize failed!}
 		} else {
-			set dashes [string repeat - 50]
 			if { ![catch {$caex setAttribute FilePrecision Double}] } {
 				puts $fexmod "setAttribute FilePrecision Double"
 			}
@@ -1912,12 +2050,16 @@ if {[string compare $model_Q2D YES]==0} {
 		}
 		# abort/end the CaeExport mode
 		$caex $status
+	
+		puts "info: QUASI 2D GRID: $3dgridname.$defExt EXPORTED IN GRID DIR."
 	}
 
 	if {[string compare $save_native YES]==0} {
 		set exportDir [file join $scriptDir grids/2dquasi]
 		file mkdir $exportDir
 		pw::Application save "$exportDir/$3dgridname.pw"
+		
+		puts "info: NATIVE FORMAT: $3dgridname.pw SAVED IN GRID DIR."
 	}
 }
 
@@ -1931,3 +2073,8 @@ puts $fexmod [string repeat - 50]
 puts $fexmod "runtime: $tmin min $tsec sec $tmsec ms" 
 puts $fexmod [string repeat - 50]
 close $fexmod
+
+puts $dashes
+puts "GRID INFO WRITTEN TO output.txt"
+puts $symsep
+puts "COMPLETE!"
