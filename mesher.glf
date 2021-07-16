@@ -44,28 +44,28 @@ set lsmthiter 2000
 #General chordwise growth ratio for node distribution over the wing, flap, and slat.
 set srfgr 1.25
 
-#chordwise growth ratio for node distribution over the wing's lower surface.
+#Chordwise growth ratio for node distribution over the wing's lower surface.
 set srfgrwl 1.2
 
-#chordwise growth ratio for node distribution over the slat's upper surface.
+#Chordwise growth ratio for node distribution over the slat's upper surface.
 set srfgrfu 1.2
 
 #GRID DIMENSION:
 #--------------------------------------------
-# 2D DIMENSIONAL MESH (YES/NO)
+#2D DIMENSIONAL MESH (YES/NO)
 set model_2D YES
 
-# QUASI 2D MESH (YES/NO)
-set model_Q2D NO
+#QUASI 2D MESH (YES/NO)
+set model_Q2D YES
 
-# Span dimension for quasi 2d model in -Y direction (max 3.0)
+#Span dimension for quasi 2d model in -Y direction (max 3.0)
 set span 1.0
 
-# Fix number of points in spanwise direction? If YES, indicate number of points below. (YES/NO)
+#Fix number of points in spanwise direction? If YES, indicate number of points below. (YES/NO)
 set fixed_snodes YES
 
-# Number of points in spanwise direction. This parameter will be ignored
-# If you opt NO above, this is set automatically based on maximum spacing over wing, slat and flap.
+#Number of points in spanwise direction. This parameter will be ignored
+#If you opt NO above, this is set automatically based on maximum spacing over wing, slat and flap.
 set span_dimension 4
 
 #CAE EXPORT:
@@ -74,16 +74,16 @@ set span_dimension 4
 set cae_solver CGNS
 
 #HIGH ORDER DESCRETIZATION EXPORT POLYNOMIAL DEGREE (Q1:Linear - Q4:quartic) | FOR SU2 ONLY Q1
-set POLY_DEG Q1
+set POLY_DEG Q2
 
 #USING HIGH ORDER DESCRETIZATION GRID GUIDELINE SPECIFICATION IN GUIDELINE DIR (YES/NO)
-set HO_GEN NO
+set HO_GEN YES
 
 #ENABLES CAE EXPORT (YES/NO)
 set cae_export NO
 
 #SAVES NATIVE FORMATS (YES/NO)
-set save_native NO
+set save_native YES
 
 #INITIAL GROWTH RATIOS FOR NODE DISTRIBUTION:
 #--------------------------------------------
