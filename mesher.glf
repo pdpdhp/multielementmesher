@@ -32,7 +32,7 @@ set global_smth YES
 
 # number of iterations to run the global elliptic solver.
 # (>1000 Recommended)
-set gsmthiter 3000
+set gsmthiter 1000
 
 # running structured elliptic solver over local domains only if global is switched off (e.g. near the configuration) (YES/NO)
 set local_smth NO
