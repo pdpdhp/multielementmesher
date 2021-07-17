@@ -18,81 +18,86 @@ package require PWI_Glyph 3.18.3
 set airfoil CRMHL-2D
 
 #GRID REFINEMENT LEVEL:
-#--------------------------------------------
-#Grid Levels vary from the first line of the grid_specification.txt to the last line!
-#Default values from 6 to 0! Last line is level 6 and the coarsest!
-set res_lev 3
+#====================================================
+#Grid Levels vary from the first line (finest, level 0) of the grid_specification.txt to the last line (coarsest, level 6)!
+set res_lev 2
 
-#GRID SYSTEM: STRUCTURED OR UNSTRUCTRED
-#--------------------------------------------
-#PLEASE SELECT GRID TYPE: STR | UNSTR
+#GRID SYSTEM'S ARRANGEMENT: STRUCTURED OR UNSTRUCTRED
+#====================================================
+#PLEASE SELECT GRID SYSTEM: STR (for STRUCTURED) | UNSTR (for UNSTRUCTURED)
 set GRD_TYP UNSTR
 
-#UNSTRUCTRED GRID PROPERTIES
-#--------------------------------------------
+# UNSTRUCTURED SETTINGS:
+#====================================================
+#UNSTRUCTRED GRID PROPERTIES FOR GRD_TYP: UNSTR
+#----------------------------------------------------
 #UNSTRUCTURED SOLVER ALGORITHM: AdvancingFront | AdvancingFrontOrtho | Delaunay
 set UNS_ALG AdvancingFrontOrtho
 
 #UNSTRUCTRED SOLVER CELL TYPE: TriangleQuad | Triangle
 set UNS_CTYP TriangleQuad
 
-#SIZE FIELD DECAY FACTOR FOR UNSTRUCTRED SOLVER
-set SIZE_DCY 0.65
+#GENERAL DECAY FACTOR FOR UNSTRUCTRED SOLVER
+set SIZE_DCY 0.6
 
-#GLOBAL AND LOCAL SMOOTHER:
-#--------------------------------------------
-# running elliptic solver over all domains excluding boundary layers. (YES/NO)
+# STRUCTURED SETTINGS:
+#====================================================
+#GLOBAL AND LOCAL SMOOTHER FOR GRD_TYP: STR
+#----------------------------------------------------
+# TO RUN ELLIPTIC SOLVER OVER ALL DOMAINS EXCLUDING BOUNDARY LAYERS. (YES/NO)
 set global_smth YES
 
-# number of iterations to run the global elliptic solver.
-# (>1000 Recommended)
+# NUMBER OF ITERATIONS FOR GLOBAL ELLIPTIC SOLVER
+# (>1000 is recommended)
 set gsmthiter 1000
 
-# running structured elliptic solver over local domains only if global is switched off (e.g. near the configuration) (YES/NO)
+# TO RUN ELLIPTIC SOLVER OVER ALL DOMAINS | RUNS ONLY IF GLOBAL SMOOTHER IS OFF | INCLUDES NEAR CONFIG DOMAINS. (YES/NO)
 set local_smth NO
 
-# number of iterations to run the local elliptic solver.
-# (>1000 Recommended)
+# NUMBER OF ITERATIONS TO RUN LOCAL ELLIPTIC SOLVER.
+# (>1000 is recommended)
 set lsmthiter 2000
 
+# GENERAL SETTINGS:
+#==================================================
 #GROWTH RATIOS:
-#--------------------------------------------
-#General chordwise growth ratio for node distribution over the wing, flap, and slat.
+#--------------------------------------------------
+#general chordwise growth ratio for node distribution over the wing, flap, and slat.
 set srfgr 1.25
 
-#Chordwise growth ratio for node distribution over the wing's lower surface.
+#chordwise growth ratio for node distribution over the wing's lower surface.
 set srfgrwl 1.2
 
-#Chordwise growth ratio for node distribution over the slat's upper surface.
+#chordwise growth ratio for node distribution over the slat's upper surface.
 set srfgrfu 1.2
 
-#GRID DIMENSION:
-#--------------------------------------------
+# GRID DIMENSION:
+#===================================================
 #2D DIMENSIONAL MESH (YES/NO)
 set model_2D YES
 
-#QUASI 2D MESH (YES/NO)
+#QUASI 2D MESH | GENERATES AN EXTRUDED VERSION (YES/NO)
 set model_Q2D NO
 
-#Span dimension for quasi 2d model in -Y direction (max 3.0)
+#SPAN DIMENSION FOR QUASI 2D MODEL IN -Y DIRECTION | MAXIMUM 3.0
 set span 1.0
 
 #Fix number of points in spanwise direction? If YES, indicate number of points below. (YES/NO)
 set fixed_snodes YES
 
-#Number of points in spanwise direction. This parameter will be ignored
-#If you opt NO above, this is set automatically based on maximum spacing over wing, slat and flap.
+#Number of points in spanwise direction. If you opt NO above, This parameter will be ignored
+# and will be set automatically based on maximum spacing over wing, slat and flap.
 set span_dimension 4
 
 #CAE EXPORT:
-#--------------------------------------------
+#===================================================
 #CAE SOLVER SELECTION. (Exp. SU2 or CGNS)
 set cae_solver CGNS
 
-#HIGH ORDER DESCRETIZATION EXPORT POLYNOMIAL DEGREE (Q1:Linear - Q4:quartic) | FOR SU2 ONLY Q1
+#POLYNOMIAL DEGREE FOR HIGH ORDER MESH EXPORT (Q1:Linear - Q4:quartic) | FOR SU2 ONLY Q1
 set POLY_DEG Q2
 
-#USING HIGH ORDER DESCRETIZATION GRID GUIDELINE SPECIFICATION IN GUIDELINE DIR (YES/NO)
+#USING HIGH ORDER GRID GUIDELINE SPECIFICATION IN GUIDELINE DIR (YES/NO)
 set HO_GEN NO
 
 #ENABLES CAE EXPORT (YES/NO)
@@ -102,7 +107,7 @@ set cae_export NO
 set save_native YES
 
 #INITIAL GROWTH RATIOS FOR NODE DISTRIBUTION:
-#--------------------------------------------
+#===================================================
 # region 1 con 1 growth ratio --> region 1 refers to the region on top of the slat!
 set r1c1gr 1.09
 
@@ -411,7 +416,9 @@ $reg2_con2 setDimension [$reg2_con3 getDimension]
 # 2. BTW WING AND SLAT
 set dom_blk3 [pw::DomainStructured createFromConnectors [list [lindex $con_alsp 1] $reg2_con3 $sl $reg2_con2]]
 $domexm addEntity $dom_blk3
-lappend ncells [$dom_blk3 getCellCount]
+if {[string compare $GRD_TYP STR]==0} {
+	lappend ncells [$dom_blk3 getCellCount]
+}
 lappend doms $dom_blk3
 lappend adjdoms $dom_blk3
 lappend fixdoms $dom_blk3
@@ -1164,7 +1171,11 @@ set blk4 [pw::DomainStructured create]
 	$blk4 addEdge $edge44
 
 $domexm addEntity $blk4
-lappend ncells [$blk4 getCellCount]
+
+if {[string compare $GRD_TYP STR]==0} {
+	lappend ncells [$blk4 getCellCount]
+}
+
 lappend doms $blk4
 lappend adjdoms $blk4
 lappend adjdoms $blk4
@@ -1378,18 +1389,27 @@ if {[string compare $GRD_TYP UNSTR]==0} {
 	$fronttail examine
 	set fronttailv [$fronttail getValue [[[lindex $smthd 8] getEdge 1] getConnector 1] 1]
 	
+	set domfarbc []
+	set confarbc []
+	
 	set downstreamcons []
 	lappend downstreamcons [[[lindex $smthd 1] getEdge 1] getConnector 5]
+	lappend domfarbc [lindex $smthd 1]
+	
 	lappend downstreamcons [[[lindex $smthd 2] getEdge 1] getConnector 3]
+	lappend domfarbc [lindex $smthd 2]
+	
 	lappend downstreamcons [[[lindex $smthd 8] getEdge 1] getConnector 3]
+	lappend domfarbc [lindex $smthd 8]
 	
 	foreach cons $downstreamcons {
+		lappend confarbc $cons
 		$cons setDimensionFromSpacing $flaptailv
 		$cons replaceDistribution 1 [pw::DistributionTanh create]
 		[$cons getDistribution 1] setBeginSpacing 0.0
 		[$cons getDistribution 1] setEndSpacing 0.0
 	}
-	 
+	
 	set upstreamcons []
 	lappend upstreamcons [[[lindex $smthd 2] getEdge 1] getConnector 4]
 	lappend upstreamcons [[[lindex $smthd 3] getEdge 1] getConnector 4]
@@ -1400,6 +1420,8 @@ if {[string compare $GRD_TYP UNSTR]==0} {
 	lappend upstreamcons [[[lindex $smthd 8] getEdge 1] getConnector 2]
 	
 	foreach cons $upstreamcons {
+		lappend domfarbc [lindex $smthd [expr [lsearch $upstreamcons $cons]+2]]
+		lappend confarbc $cons
 		$cons setDimensionFromSpacing $fronttailv
 		$cons replaceDistribution 1 [pw::DistributionTanh create]
 		[$cons getDistribution 1] setBeginSpacing 0.0
@@ -1415,13 +1437,14 @@ if {[string compare $GRD_TYP UNSTR]==0} {
 	[lindex $upstreamcons 6] setSubConnectorDimensionFromDistribution 1
 	
 	#size field defination
-	set radius [list 1.5 3.5 5.5 7.5 11.5]
+	set radius [list 1.5 4.5 13.5 40.5 121.5]
 	
 	set levspc [expr [$wu getAverageSpacing]*2]
+	lappend decayfactor 0.99
 	
 	for {set i 0} {$i<6} {incr i} {
-		lappend spcfactor [expr $levspc*($i*3+1)]
-		lappend decayfactor [expr 0.8-(0.15*$i)]
+		lappend spcfactor [expr $levspc*(($i)**3+1)]
+		lappend decayfactor [expr [lindex $decayfactor $i]-0.1]
 	}
 	
 	for {set i 0} {$i<5} {incr i} {
@@ -1447,7 +1470,17 @@ if {[string compare $GRD_TYP UNSTR]==0} {
 	
 	foreach dom $smthd {
 		$dom setSizeFieldDecay $SIZE_DCY
+			foreach edge [$dom getEdges] {
+				for {set i 1} {$i <= [$edge getConnectorCount]} {incr i} {
+					lappend unstrbcs [list $dom [$edge getConnector $i] [$edge getConnectorOrientation $i]]
+				}
+			}
 	}
+	
+	set unstrbcondition [pw::TRexCondition create]
+	$unstrbcondition setName adapts
+	$unstrbcondition apply $unstrbcs
+	$unstrbcondition setAdaptation On
 	
 	set UnsCol [pw::Collection create]
 	$UnsCol set $smthd
@@ -1455,6 +1488,11 @@ if {[string compare $GRD_TYP UNSTR]==0} {
 	$UnsCol do setUnstructuredSolverAttribute IsoCellType $UNS_CTYP
 	$unstrsolve run Initialize
 	$unstrsolve end
+	
+	foreach dom $smthd {
+		lappend ncells [$dom getCellCount]
+	}
+
 }
 
 
@@ -1478,6 +1516,7 @@ set bcfar [pw::BoundaryCondition create]
 set dashes [string repeat - 50]
 
 if {[string compare $cae_solver CGNS]==0} {
+	pw::Application setCAESolverAttribute CGNS.FileType adf
 	pw::Application setCAESolverAttribute ExportPolynomialDegree $POLY_DEG
 }
 
@@ -1503,7 +1542,9 @@ if {[string compare $model_2D YES]==0} {
 	set ncell [expr [join $ncells +]]
 	set gorder [string length $ncell]
 
-	if {$gorder<7} {
+	if {$gorder<6} {
+		set gridID "[string range $ncell 0 1]k"
+	} elseif {$gorder>=6 && $gorder<7} {
 		set gridID "[string range $ncell 0 2]k"
 	} elseif {$gorder>=7 && $gorder<10} {
 		set gridID "[string range [expr $ncell/1000000] 0 2]m[string range [expr int($ncell%1000000)] 0 2]k"
@@ -1514,14 +1555,21 @@ if {[string compare $model_2D YES]==0} {
 	append gridname lev $res_lev "_" $gridID
 	
 	puts $fexmod [string repeat - 50]
-	puts $fexmod "2D MULTIBLOCK STRUCTURED GRID | 2D CRM HIGH-LIFT CONFIG | GRID LEVEL $res_lev:"
+	
+	if {[string compare $GRD_TYP UNSTR]==0} {
+		puts $fexmod "2D MULTIBLOCK UNSTRUCTURED GRID | 2D CRM HIGH-LIFT CONFIG | GRID LEVEL $res_lev:"
+		puts "2D GRID GENERATED FOR LEVEL $res_lev | TOTAL CELLS: $ncell CELLS"
+		puts $symsepdd
+	} else {
+		puts $fexmod "2D MULTIBLOCK STRUCTURED GRID | 2D CRM HIGH-LIFT CONFIG | GRID LEVEL $res_lev:"
+		puts "2D GRID GENERATED FOR LEVEL $res_lev | TOTAL CELLS: $ncell QUADS"
+		puts $symsepdd
+	}
+
 	puts $fexmod [string repeat - 50]
 	puts $fexmod "total domains: [llength $ncells]"
 	puts $fexmod "total cells: $ncell cells"
 	puts $fexmod "min area: [format "%*e" 5 $domexmv]"
-	
-	puts "2D GRID GENERATED FOR LEVEL $res_lev | TOTAL CELLS: $ncell QUADS"
-	puts $symsepdd
 	
 	if {[string compare $cae_export YES]==0} {
 		# creating export directory
@@ -1968,7 +2016,9 @@ if {[string compare $model_Q2D YES]==0} {
 	set blkncell [expr [join $blkncells +]]
 	set blkorder [string length $blkncell]
 
-	if {$blkorder<7} {
+	if {$blkorder<6} {
+		set blkID "[string range $blkncell 0 1]k"
+	} elseif {$blkorder>=6 && $blkorder<7} {
 		set blkID "[string range $blkncell 0 2]k"
 	} elseif {$blkorder>=7 && $blkorder<10} {
 		set blkID "[string range [expr $blkncell/1000000] 0 2]m[string range [expr int($blkncell%1000000)] 0 2]k"

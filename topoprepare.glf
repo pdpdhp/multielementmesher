@@ -55,8 +55,13 @@ set confarbc []
 set domfarbc []
 
 if {[string compare $airfoil CRMHL-2D]==0} {
-	puts "STRUCTURED MULTIBLOCK GRID | 2D CRM-HL WING SECTION IMPORTED."
-	puts $symsepdd
+	if {[string compare $GRD_TYP STR]==0} {
+		puts "STRUCTURED MULTIBLOCK GRID | 2D CRM-HL WING SECTION IMPORTED."
+		puts $symsepdd
+	} elseif {[string compare $GRD_TYP UNSTR]==0} {
+		puts "UNSTRUCTURED GRID | 2D CRM-HL WING SECTION IMPORTED."
+		puts $symsepdd
+	}
 } elseif {[string compare $airfoil 30P30N]==0} {
 	puts "2-D 30P-30N MULTI-ELEMENT AIRFOIL: this part hasn't finished yet, please switch to CRMHL-2D!"
 	break

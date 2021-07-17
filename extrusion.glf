@@ -212,8 +212,10 @@ lappend conjoin [pw::Connector join [list [lindex $connjoin(7) 0] [lindex $connj
 
 $domexm addEntity $blkjoin
 
-for {set i 0} {$i < [llength $blkjoin]} {incr i} {
-	lappend ncells [[lindex $blkjoin $i] getCellCount]
+if {[string compare $GRD_TYP STR]==0} {
+	for {set i 0} {$i < [llength $blkjoin]} {incr i} {
+		lappend ncells [[lindex $blkjoin $i] getCellCount]
+	}
 }
 
 set smthd [list $dom_blk3 $blk4 {*}$blkjoin]
