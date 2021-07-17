@@ -2061,6 +2061,8 @@ if {[string compare $model_Q2D YES]==0} {
 	$wsf_surfaces set [list {*}$domwingqbc {*}$domslatqbc {*}$domflapqbc]
 	$wsf_surfaces do setLayer 30
 	
+	set clay [pw::Display getCurrentLayer]
+	
 	if {[string compare $POLY_DEG Q1]!=0} {
 		pw::Display setCurrentLayer 10
 		set tmp_model [pw::Application begin DatabaseImport]
@@ -2073,6 +2075,9 @@ if {[string compare $model_Q2D YES]==0} {
 		set dq_database [pw::Layer getLayerEntities -type pw::Quilt 10]
 		
 		pw::Entity project -type ClosestPoint [list {*}$domwingqbc {*}$domslatqbc {*}$domflapqbc] $dq_database
+
+		pw::Display setCurrentLayer $clay
+		pw::Display hideLayer 10
 	}
 	
 	#examine
@@ -2096,7 +2101,7 @@ if {[string compare $model_Q2D YES]==0} {
 		set blkID "[string range [expr $blkncell/1000000] 0 2]m[string range [expr int($blkncell%1000000)] 0 2]k"
 	} elseif {$blkorder>=10 && $blkorder<13} {
 		set blkID "[string range [expr $blkncell/1000000000] 0 2]b[string range [expr int($blkncell%1000000000)] 0 2]m"
-}
+	}
 
 	append 3dgridname lev $res_lev "_" $blkID
 	
@@ -2118,6 +2123,7 @@ if {[string compare $model_Q2D YES]==0} {
 	puts $fexmod "total blocks: [llength $blkncells]"
 	puts $fexmod "total cells: $blkncell cells"
 	puts $fexmod "min volume: [format "%*e" 5 $blkexmv]"
+	
 	
 	if {[string compare $cae_export YES]==0} {
 		# creating export directory
