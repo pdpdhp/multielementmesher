@@ -39,7 +39,7 @@ set global_smth YES
 
 # NUMBER OF ITERATIONS FOR GLOBAL ELLIPTIC SOLVER
 # (>1000 is recommended)
-set gsmthiter 1000
+set gsmthiter 3000
 
 # TO RUN ELLIPTIC SOLVER OVER ALL DOMAINS | RUNS ONLY IF GLOBAL SMOOTHER IS OFF | INCLUDES NEAR CONFIG DOMAINS. (YES/NO)
 set local_smth NO
@@ -110,7 +110,7 @@ set global_smth YES
 
 # NUMBER OF ITERATIONS FOR GLOBAL ELLIPTIC SOLVER
 # (>1000 is recommended)
-set gsmthiter 1000
+set gsmthiter 3000
 
 # TO RUN ELLIPTIC SOLVER OVER ALL DOMAINS | RUNS ONLY IF GLOBAL SMOOTHER IS OFF | INCLUDES NEAR CONFIG DOMAINS. (YES/NO)
 set local_smth NO
@@ -119,26 +119,13 @@ set local_smth NO
 # (>1000 is recommended)
 set lsmthiter 2000
 
-# GENERAL SETTINGS:
-#==================================================
-#GROWTH RATIOS:
-#--------------------------------------------------
-#general chordwise growth ratio for node distribution over the wing, flap, and slat.
-set srfgr 1.25
-
-#chordwise growth ratio for node distribution over the wing's lower surface.
-set srfgrwl 1.2
-
-#chordwise growth ratio for node distribution over the slat's upper surface.
-set srfgrfu 1.2
-
 # GRID DIMENSION:
 #===================================================
 #2D DIMENSIONAL MESH (YES/NO)
 set model_2D YES
 
 #QUASI 2D MESH | GENERATES AN EXTRUDED VERSION (YES/NO)
-set model_Q2D NO
+set model_Q2D YES
 
 #SPAN DIMENSION FOR QUASI 2D MODEL IN -Y DIRECTION | MAXIMUM 3.0
 set span 1.0
@@ -166,6 +153,19 @@ set cae_export NO
 
 #SAVES NATIVE FORMATS (YES/NO)
 set save_native YES
+
+# GENERAL SETTINGS:
+#==================================================
+#GROWTH RATIOS:
+#--------------------------------------------------
+#general chordwise growth ratio for node distribution over the wing, flap, and slat.
+set srfgr 1.25
+
+#chordwise growth ratio for node distribution over the wing's lower surface.
+set srfgrwl 1.2
+
+#chordwise growth ratio for node distribution over the slat's upper surface.
+set srfgrfu 1.2
 
 #INITIAL GROWTH RATIOS FOR NODE DISTRIBUTION:
 #===================================================
