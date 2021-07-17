@@ -5,7 +5,7 @@
 #==============================================================
 #
 # written by Pay Dehpanah
-# Mar 2021
+# last update: July 2021
 # 
 #==============================================================
 
@@ -20,7 +20,7 @@ set airfoil CRMHL-2D
 #GRID REFINEMENT LEVEL:
 #====================================================
 #Grid Levels vary from the first line (finest, level 0) of the grid_specification.txt to the last line (coarsest, level 6)!
-set res_lev 2
+set res_lev 6
 
 #GRID SYSTEM'S ARRANGEMENT: STRUCTURED OR UNSTRUCTRED
 #====================================================
@@ -1557,7 +1557,7 @@ if {[string compare $model_2D YES]==0} {
 	puts $fexmod [string repeat - 50]
 	
 	if {[string compare $GRD_TYP UNSTR]==0} {
-		puts $fexmod "2D MULTIBLOCK UNSTRUCTURED GRID | 2D CRM HIGH-LIFT CONFIG | GRID LEVEL $res_lev:"
+		puts $fexmod "2D UNSTRUCTURED GRID | 2D CRM HIGH-LIFT CONFIG | GRID LEVEL $res_lev:"
 		puts "2D GRID GENERATED FOR LEVEL $res_lev | TOTAL CELLS: $ncell CELLS"
 		puts $symsepdd
 	} else {
