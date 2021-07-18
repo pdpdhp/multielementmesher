@@ -20,12 +20,12 @@ set airfoil CRMHL-2D
 #GRID REFINEMENT LEVEL:
 #====================================================
 #Grid Levels vary from the first line (finest, level 0) of the grid_specification.txt to the last line (coarsest, level 6)!
-set res_lev 6
+set res_lev 4
 
 #GRID SYSTEM'S ARRANGEMENT: STRUCTURED OR UNSTRUCTRED
 #====================================================
 #PLEASE SELECT GRID SYSTEM: STR (for STRUCTURED) | UNSTR (for UNSTRUCTURED)
-set GRD_TYP UNSTR
+set GRD_TYP STR
 
 # UNSTRUCTURED SETTINGS:
 #====================================================
@@ -64,7 +64,7 @@ set lsmthiter 2000
 set model_2D YES
 
 #QUASI 2D MESH | GENERATES AN EXTRUDED VERSION (YES/NO)
-set model_Q2D NO
+set model_Q2D YES
 
 #SPAN DIMENSION FOR QUASI 2D MODEL IN -Y DIRECTION | MAXIMUM 3.0
 set span 1.0
@@ -85,7 +85,7 @@ set cae_solver CGNS
 set POLY_DEG Q1
 
 #USING HIGH ORDER GRID GUIDELINE SPECIFICATION IN GUIDELINE DIR (YES/NO)
-set HO_GEN YES
+set HO_GEN NO
 
 #ENABLES CAE EXPORT (YES/NO)
 set cae_export YES
@@ -1494,6 +1494,10 @@ if {[string compare $GRD_TYP UNSTR]==0} {
 	foreach dom $smthd {
 		lappend ncells [$dom getCellCount]
 	}
+	
+	[lindex $smthd 0] flipOrientation
+	[lindex $smthd 3] flipOrientation
+	[lindex $smthd 5] flipOrientation
 
 }
 
@@ -1842,7 +1846,7 @@ if {[string compare $model_Q2D YES]==0} {
 		#block 2
 		set dommrightqbc(3) [[[lindex $blk 2] getFace 6] getDomains]
 		set dommleftqbc(3) [[[lindex $blk 2] getFace 1] getDomains]
-		set dommslatqbc(1) [[[lindex $blk 2] getFace 3] getDomains]
+		set dommslatqbc(1) [[[lindex $blk 2] getFace 2] getDomains]
 		
 		foreach ent $dommrightqbc(3) {
 			lappend domrightqbc $ent
@@ -1899,10 +1903,11 @@ if {[string compare $model_Q2D YES]==0} {
 			lappend blkslatqbc [lindex $blk 4]
 		}
 		
+		
 		#block 5
 		set dommrightqbc(6) [[[lindex $blk 5] getFace 6] getDomains]
 		set dommleftqbc(6) [[[lindex $blk 5] getFace 1] getDomains]
-		set dommfarqbc(4) [[[lindex $blk 5] getFace 5] getDomains]
+		set dommfarqbc(4) [[[lindex $blk 5] getFace 2] getDomains]
 		
 		foreach ent $dommrightqbc(6) {
 			lappend domrightqbc $ent
@@ -1984,7 +1989,7 @@ if {[string compare $model_Q2D YES]==0} {
 		#blcok 9
 		set dommrightqbc(10) [[[lindex $blk 9] getFace 6] getDomains]
 		set dommleftqbc(10) [[[lindex $blk 9] getFace 1] getDomains]
-		set dommfarqbc(7) [[[lindex $blk 9] getFace 4] getDomains]
+		set dommfarqbc(7) [[[lindex $blk 9] getFace 2] getDomains]
 		
 		foreach ent $dommrightqbc(10) {
 			lappend domrightqbc $ent
@@ -2063,22 +2068,20 @@ if {[string compare $model_Q2D YES]==0} {
 	
 	set clay [pw::Display getCurrentLayer]
 	
-	if {[string compare $POLY_DEG Q1]!=0} {
-		pw::Display setCurrentLayer 10
-		set tmp_model [pw::Application begin DatabaseImport]
-		  $tmp_model initialize -strict -type Automatic $geoDir/crmhl2dcut_extr.iges
-		  $tmp_model read
-		  $tmp_model convert
-		$tmp_model end
-		unset tmp_model
-		
-		set dq_database [pw::Layer getLayerEntities -type pw::Quilt 10]
-		
-		pw::Entity project -type ClosestPoint [list {*}$domwingqbc {*}$domslatqbc {*}$domflapqbc] $dq_database
+	pw::Display setCurrentLayer 10
+	set tmp_model [pw::Application begin DatabaseImport]
+	  $tmp_model initialize -strict -type Automatic $geoDir/crmhl2dcut_extr.iges
+	  $tmp_model read
+	  $tmp_model convert
+	$tmp_model end
+	unset tmp_model
+	
+	set dq_database [pw::Layer getLayerEntities -type pw::Quilt 10]
+	
+	pw::Entity project -type ClosestPoint [list {*}$domwingqbc {*}$domslatqbc {*}$domflapqbc] $dq_database
 
-		pw::Display setCurrentLayer $clay
-		pw::Display hideLayer 10
-	}
+	pw::Display setCurrentLayer $clay
+	pw::Display hideLayer 10
 	
 	#examine
 	set blkexm [pw::Examine create BlockVolume]

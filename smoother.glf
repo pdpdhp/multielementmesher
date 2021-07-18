@@ -43,6 +43,14 @@ if {[string compare $global_smth YES]==0 && [string compare $GRD_TYP STR]==0} {
 	$smth1 run $gsmthiter
 	$smth1 end
 	
+	[lindex $smthd 5] setOrientation JMinimum IMinimum
+
+	[lindex $smthd 0] setOrientation JMinimum IMinimum
+	[lindex $smthd 0] setOrientation IMaximum JMinimum
+	[lindex $smthd 0] setOrientation IMinimum JMaximum
+
+	[lindex $smthd 3] setOrientation IMinimum JMaximum
+	
 	puts $symsepdd
 	puts "GLOBAL ELLIPTIC SOLVER FINISHED $gsmthiter ITERATIONS OVER [llength $smthd] STRUCTURED DOMAINS."
 	puts $symsepdd
