@@ -212,7 +212,24 @@ For both 2D and quasi 2D grids boundary conditions are assigned appropriately to
 
 In case you encounter any issues using the scripts please use the issue feature on Github and let me know of that or send me an email. I will do my best to address that as soon as possible.
 
-![grid1](https://github.com/pdpdhp/multielementmesher/blob/master/grid1.png)
+#### 2D Unstructured:
 
-![grid2](https://github.com/pdpdhp/multielementmesher/blob/master/grid2.png)
+![UNSTR_DT](https://github.com/pdpdhp/multielementmesher/blob/master/UNSTR_DT.png)
+
+![UNSTR_ATQ](https://github.com/pdpdhp/multielementmesher/blob/master/UNSTR_ATQ.png)
+
+![UNSTR_AOTQ](https://github.com/pdpdhp/multielementmesher/blob/master/UNSTR_AOTQ.png)
+
+#### Quasi 2D Unstructured:
+
+![UNSTR_AOTQ_Q2D](https://github.com/pdpdhp/multielementmesher/blob/master/UNSTR_AOTQ_Q2D.png)
+
+#### 2D Structured:
+
+![STR](https://github.com/pdpdhp/multielementmesher/blob/master/STR.png)
+
+#### Quasi 2D Structured:
+
+![STR_Q2D](https://github.com/pdpdhp/multielementmesher/blob/master/STR_Q2D.png)
+
 
