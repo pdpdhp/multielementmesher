@@ -25,7 +25,7 @@ set res_lev 4
 #GRID SYSTEM'S ARRANGEMENT: STRUCTURED OR UNSTRUCTRED
 #====================================================
 #PLEASE SELECT GRID SYSTEM: STR (for STRUCTURED) | UNSTR (for UNSTRUCTURED)
-set GRD_TYP STR
+set GRD_TYP UNSTR
 
 # UNSTRUCTURED SETTINGS:
 #====================================================
