@@ -49,7 +49,7 @@ set global_smth YES
 
 # NUMBER OF ITERATIONS FOR GLOBAL ELLIPTIC SOLVER
 # (>1000 is recommended)
-set gsmthiter 1000
+set gsmthiter 3000
 
 # TO RUN ELLIPTIC SOLVER OVER ALL DOMAINS | RUNS ONLY IF GLOBAL SMOOTHER IS OFF | INCLUDES NEAR CONFIG DOMAINS. (YES/NO)
 set local_smth NO
@@ -85,10 +85,10 @@ set cae_solver CGNS
 set POLY_DEG Q1
 
 #USING HIGH ORDER GRID GUIDELINE SPECIFICATION IN GUIDELINE DIR (YES/NO)
-set HO_GEN NO
+set HO_GEN YES
 
 #ENABLES CAE EXPORT (YES/NO)
-set cae_export NO
+set cae_export YES
 
 #SAVES NATIVE FORMATS (YES/NO)
 set save_native YES
@@ -1554,7 +1554,7 @@ if {[string compare $model_2D YES]==0} {
 		set gridID "[string range [expr $ncell/1000000000] 0 2]b[string range [expr int($ncell%1000000000)] 0 2]m"
 }
 
-	append gridname lev $res_lev "_" $gridID
+	append gridname $GRD_TYP "_" 2D "_" lev $res_lev "_" $gridID "_" $POLY_DEG
 	
 	puts $fexmod [string repeat - 50]
 	
@@ -2103,7 +2103,7 @@ if {[string compare $model_Q2D YES]==0} {
 		set blkID "[string range [expr $blkncell/1000000000] 0 2]b[string range [expr int($blkncell%1000000000)] 0 2]m"
 	}
 
-	append 3dgridname lev $res_lev "_" $blkID
+	append 3dgridname $GRD_TYP "_" Q2D "_" lev $res_lev "_" $blkID "_" $POLY_DEG
 	
 	puts $fexmod [string repeat - 50]
 	
@@ -2210,7 +2210,7 @@ puts $fexmod "runtime: $tmin min $tsec sec $tmsec ms"
 puts $fexmod [string repeat - 50]
 close $fexmod
 
-puts $dashes
+puts $symsepdd
 puts "GRID INFO WRITTEN TO output.txt"
 puts $symsep
 puts "COMPLETE!"
