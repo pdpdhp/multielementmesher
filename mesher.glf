@@ -185,7 +185,7 @@ if {$res_lev<$NUM_REF} {
 
 }
 
-set symsep [string repeat = 88]
+set symsep [string repeat = 91]
 set symsepd [string repeat . 88]
 set symsepdd [string repeat - 88]
 
