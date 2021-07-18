@@ -214,22 +214,22 @@ In case you encounter any issues using the scripts please use the issue feature 
 
 #### 2D Unstructured:
 
-![UNSTR_DT](https://github.com/pdpdhp/multielementmesher/blob/master/UNSTR_DT.png)
+![UNSTR_DT](https://github.com/pdpdhp/multielementmesher/blob/master/pics/UNSTR_DT.png)
 
-![UNSTR_ATQ](https://github.com/pdpdhp/multielementmesher/blob/master/UNSTR_ATQ.png)
+![UNSTR_ATQ](https://github.com/pdpdhp/multielementmesher/blob/master/pics/UNSTR_ATQ.png)
 
-![UNSTR_AOTQ](https://github.com/pdpdhp/multielementmesher/blob/master/UNSTR_AOTQ.png)
+![UNSTR_AOTQ](https://github.com/pdpdhp/multielementmesher/blob/master/pics/UNSTR_AOTQ.png)
 
 #### Quasi 2D Unstructured:
 
-![UNSTR_AOTQ_Q2D](https://github.com/pdpdhp/multielementmesher/blob/master/UNSTR_AOTQ_Q2D.png)
+![UNSTR_AOTQ_Q2D](https://github.com/pdpdhp/multielementmesher/blob/master/pics/UNSTR_AOTQ_Q2D.png)
 
 #### 2D Structured:
 
-![STR](https://github.com/pdpdhp/multielementmesher/blob/master/STR.png)
+![STR](https://github.com/pdpdhp/multielementmesher/blob/master/pics/STR.png)
 
 #### Quasi 2D Structured:
 
-![STR_Q2D](https://github.com/pdpdhp/multielementmesher/blob/master/STR_Q2D.png)
+![STR_Q2D](https://github.com/pdpdhp/multielementmesher/blob/master/pics/STR_Q2D.png)
 
 
