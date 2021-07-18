@@ -1558,7 +1558,7 @@ if {[string compare $model_2D YES]==0} {
 		set gridID "[string range [expr $ncell/1000000000] 0 2]b[string range [expr int($ncell%1000000000)] 0 2]m"
 }
 
-	append gridname $GRD_TYP "_" 2D "_" lev $res_lev "_" $gridID "_" $POLY_DEG
+	append gridname $GRD_TYP "_" 2D "_" lev $res_lev "_" $gridID "_" Q1
 	
 	puts $fexmod [string repeat - 50]
 	
