@@ -189,7 +189,7 @@ set symsep [string repeat = 91]
 set symsepd [string repeat . 88]
 set symsepdd [string repeat - 88]
 
-puts "GRID GUIDELINE: Y+: $ypg | Delta_S(m): $dsg | GR: $grg | Chordwise_Spacing(m): $chord_sg"
+puts "GRID GUIDELINE: Level: $res_lev | Y+: $ypg | Delta_S(m): $dsg | GR: $grg | Chordwise_Spacing(m): $chord_sg"
 puts $symsep
 
 set time_start [pwu::Time now]
@@ -2190,7 +2190,7 @@ if {[string compare $model_Q2D YES]==0} {
 		# abort/end the CaeExport mode
 		$caex $status
 	
-		puts "info: QUASI 2D GRID: $3dgridname.$defExt EXPORTED IN GRID DIR."
+		puts "info: QUASI 2D $POLY_DEG GRID: $3dgridname.$defExt EXPORTED IN GRID DIR."
 	}
 
 	if {[string compare $save_native YES]==0} {
