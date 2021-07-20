@@ -6,10 +6,10 @@ These scripts written to generate structured or unstrcutred grids on CRM high-li
 
 #### Instruction:
 
-To generate a mesh you can run CRM2DMesher.glf with Pointwise in batch mode. Without specifying an input, it uses defaultMeshParameters.glf and takes grid parameters from there. To customize the grid input, you can edit them in customized_meshpara.template and generate the mesh by:
+To generate a mesh you can run CRM2DMesher.glf with Pointwise in batch mode. Input file is optional. Without specifying an input, it uses defaultMeshParameters.glf and takes grid parameters from there. To customize the grid input, you can edit them in customized_meshpara.template and generate the mesh by:
 
 ```shell
-pointwise -b CRM2DMesher.glf customized_meshpara.template
+pointwise -b CRM2DMesher.glf <?customized_meshpara.template?>
 ```
 
 After the mesh is complete, you can see summary of CAE export in CAE_export.out. Grid with indicated format will be saved in the grids directory.
