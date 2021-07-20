@@ -1,3 +1,12 @@
+# =============================================================
+# This script is written to generate structured multi-block or
+# unstructured grids with different refinement levels over the
+# CRM high-lift 2D section according to grid guideline.
+#==============================================================
+# written by Pay Dehpanah
+# last update: July 2021
+#==============================================================
+
 import numpy as np
 import math
 from pathlib import Path
@@ -8,54 +17,59 @@ dirname = os.path.dirname(os.path.realpath(__file__))
 Path(f"{dirname}").mkdir(parents=True, exist_ok=True)
 
 #----------------------------GRID GUIDELINE--------------------
-
 #TARGET Y PLUS FOR RANS AND HYBRID RANS/LES
 TARG_YPR = [0.25,0.35,0.5,0.7,1.0,1.4,2.0]
-
+#
+#
 #BOUNDARY BLOCK CELL GROWTH RATE
-TARG_GR=[1.03,1.04,1.06,1.08,1.12,1.17,1.25]
-
+TARG_GR = [1.03,1.04,1.06,1.08,1.12,1.17,1.25]
+#
+#
 # CHORDWISE SPACING ACCORDING TO GRID GUIDELINE
 CHR_SPC = [0.0002,0.00066,0.001,0.00125,0.002,0.003,0.0045]
-
+#
+#
 # TRAILING EDGE SPACING RATIO ACCORDING TO GRID GUIDELINE
 TE_SRT = [7.5e-06,1.5e-05,3.0e-05,0.6e-04,1.2e-04,2.5e-04,5.0e-04]
-
+#
+#
 # TRAILING EDGE NUMBER OF POINTS ACCORDING TO GRID GUIDELINE
 TE_PT1 = [640,320,160,80,40,20,10]
-
+#
+#
 # TRAILING EDGE NUMBER OF POINTS ACCORDING TO GRID GUIDELINE
 TE_PT2 = [320,160,80,40,20,10,10]
-
+#
+#
 # EXPLICIT EXTRUSION FACTORS ACCORDING TO GRID GUIDELINE
 EXP_FAC = [0.9,0.9,0.9,0.9,0.9,0.9,0.9]
-
+#
+#
 # IMPLICIT EXTRUSION FACTORS ACCORDING TO GRID GUIDELINE
 IMP_FAC = [100,100,100,100,100,100,100]
-
+#
+#
 # NORMAL EXTRUSION VOLUME RATIO ACCORDING TO GRID GUIDELINE
 VOL_FAC = [0.001,0.0012,0.0014,0.0016,0.0018,0.020,0.018]
-
+#
+#
 # NORMAL EXTRUSION STEPS ACCORDING TO GRID GUIDELINE
-EXTR_STP=[150,120,100,80,60,40,30]
-
+EXTR_STP = [150,120,100,80,60,40,30]
+#
 #-------------------------HIGH ORDER DESCRETIZATION------------
-# HO Grid (YES/NO)
-HO_GRID = "YES"
-
 #TARGET Y PLUS FOR HIGH ORDER DISCRETIZATION
 TARG_YPH = [1.0,5.0,10.0,20.0,30.0,40.0,50.0]
-
+#
+#
 #BOUNDARY BLOCK CELL GROWTH RATE FOR HIGH ORDER DISCRETIZATION
-TARG_GRH=[1.03,1.04,1.06,1.08,1.12,1.17,1.20]
-
+TARG_GRH = [1.03,1.04,1.06,1.08,1.12,1.17,1.20]
+#
 #====================================================================
-
+#
 NUM_LEVR = len(TARG_YPR)
 NUM_LEVH = len(TARG_YPH)
-
+#
 #Flow Properties
-
 #-----------------TEMPERATURE--------------
 #(K)
 T=272.1
@@ -224,10 +238,9 @@ f.write("%1.5e  %1.9e   %1.7e  %1.7e %1.15e  %1.5e\r\n" % (flow_spec_us[0],flow_
 f.close()
 
 
-if HO_GRID == "YES":
-	f = open(f'{dirname}/grid_specification_HO.txt', 'w')
-	f.write("%7s %17s %9s %16s %7s %10s %4s %4s %9s %10s %10s %6s\n" % ("Y+","Delta_S(in)","GR","C_Spacing(in)","TE Ratio","LE Ratio","TE1","TE2","ExpExtr","ImpExtr","VolExtr","NExtr"))
-	for i in range(NUM_LEVH):
-	    f.write(" % 1.3e  % 1.7e % 1.3e  % 1.3e % 1.3e % 1.3e % 4d % 4d % 1.3e % 1.3e % 1.3e % 3d\n" % (grid_spec_ho[i,0],grid_spec_ho[i,1],grid_spec_ho[i,2],\
-    								grid_spec_ho[i,3],grid_spec_ho[i,4],grid_spec_ho[i,5],grid_spec_ho[i,6],grid_spec_ho[i,7],grid_spec_ho[i,8],grid_spec_ho[i,9],grid_spec_ho[i,10],grid_spec_ho[i,11]))
-	f.close()
+f = open(f'{dirname}/grid_specification_HO.txt', 'w')
+f.write("%7s %17s %9s %16s %7s %10s %4s %4s %9s %10s %10s %6s\n" % ("Y+","Delta_S(in)","GR","C_Spacing(in)","TE Ratio","LE Ratio","TE1","TE2","ExpExtr","ImpExtr","VolExtr","NExtr"))
+for i in range(NUM_LEVH):
+    f.write(" % 1.3e  % 1.7e % 1.3e  % 1.3e % 1.3e % 1.3e % 4d % 4d % 1.3e % 1.3e % 1.3e % 3d\n" % (grid_spec_ho[i,0],grid_spec_ho[i,1],grid_spec_ho[i,2],\
+							grid_spec_ho[i,3],grid_spec_ho[i,4],grid_spec_ho[i,5],grid_spec_ho[i,6],grid_spec_ho[i,7],grid_spec_ho[i,8],grid_spec_ho[i,9],grid_spec_ho[i,10],grid_spec_ho[i,11]))
+f.close()

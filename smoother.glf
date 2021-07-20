@@ -1,25 +1,19 @@
 # =============================================================
-# This script is written to generate structured multi-block
-# grids with different refinement levels over the CRM high-lift 
-# 2D section according to grid guideline specifications.
+# This script is written to generate structured multi-block or
+# unstructured grids with different refinement levels over the
+# CRM high-lift 2D section according to grid guideline.
 #==============================================================
-#
 # written by Pay Dehpanah
-# Mar 2021
-# 
-#==============================================================
-#
-# called by ---> extrusion.glf
-#
+# last update: July 2021
 #==============================================================
 
-package require PWI_Glyph 3.18.3
+proc Global_Smooth { } {
+	
+	global smthd floatd floatedg fixd fixedg orthod orthoedg gsmthiter
+	
+	upvar 1 symsepdd asep
 
-set scriptDir [file dirname [info script]]
-
-# running elliptic solver over domains surrounding the configuration
-
-if {[string compare $global_smth YES]==0 && [string compare $GRD_TYP STR]==0} {
+	# running elliptic solver over domains surrounding the configuration
 
 	set smth1 [pw::Application begin EllipticSolver $smthd]
 
@@ -51,8 +45,8 @@ if {[string compare $global_smth YES]==0 && [string compare $GRD_TYP STR]==0} {
 
 	[lindex $smthd 3] setOrientation IMinimum JMaximum
 	
-	puts $symsepdd
+	puts $asep
 	puts "GLOBAL ELLIPTIC SOLVER FINISHED $gsmthiter ITERATIONS OVER [llength $smthd] STRUCTURED DOMAINS."
-	puts $symsepdd
+	puts $asep
 }
 
