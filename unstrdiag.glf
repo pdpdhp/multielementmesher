@@ -6,6 +6,45 @@
 # written by Pay Dehpanah
 # last update: July 2021
 #==============================================================
+proc Source_Unstr { } {
+	global smthd wu
+	
+	#size field defination
+	set base_rad [list 0.4 0.8 1.6 3.2 6.4]
+	set top_rad [list 0.25 0.5 1.0 2.0 4.0]
+	set cyn_len [list 1.5 4.5 13.5 40.5 121.5]
+	
+	set levspc [expr [$wu getAverageSpacing]*0.75]
+	lappend cyndecayfactor 0.99
+	
+	for {set i 0} {$i<6} {incr i} {
+		lappend cylinder_spcfactor [expr $levspc*(($i)**2.5+1)]
+		lappend cyndecayfactor [expr [lindex $cyndecayfactor $i]-0.1]
+	}
+	
+	
+	for {set i 0} {$i<5} {incr i} {
+		lappend cynsourcesh [pw::SourceShape create]
+		[lindex $cynsourcesh $i] cylinder -radius \
+			[lindex $base_rad $i] -topRadius [lindex $top_rad $i] -length [lindex $cyn_len $i]
+
+		[lindex $cynsourcesh $i] setTransform \
+				[list 0 0 1 0 0 1 0 0 -1 0 0 0 0.083520643853 -0.0109231602598 0 1]
+		[lindex $cynsourcesh $i] setPivot Top
+		[lindex $cynsourcesh $i] setSectionMinimum 0
+		[lindex $cynsourcesh $i] setSectionMaximum 360
+		[lindex $cynsourcesh $i] setSidesType Plane
+		[lindex $cynsourcesh $i] setBaseType Sphere
+		[lindex $cynsourcesh $i] setTopType Sphere
+		[lindex $cynsourcesh $i] setEnclosingEntities {}
+		[lindex $cynsourcesh $i] setSpecificationType AxisToPerimeter
+		[lindex $cynsourcesh $i] setBeginSpacing [lindex $cylinder_spcfactor $i]
+		[lindex $cynsourcesh $i] setBeginDecay [lindex $cyndecayfactor $i]
+		[lindex $cynsourcesh $i] setEndSpacing [lindex $cylinder_spcfactor [expr $i+1]]
+		[lindex $cynsourcesh $i] setEndDecay [lindex $cyndecayfactor [expr $i+1]]
+	}
+
+}
 
 proc Mesh_Unstr { } {
 	
@@ -24,6 +63,7 @@ proc Mesh_Unstr { } {
 	set diag [pw::Application begin Create]
 	set triandoms [$diagcol do triangulate Initialized]
 	$diag end
+	
 	pw::Entity delete $smthd
 	
 	set smthd [pw::Grid getAll -type pw::DomainUnstructured]
@@ -114,6 +154,8 @@ proc Mesh_Unstr { } {
 		[lindex $sourcesh $i] setEndSpacing [lindex $spcfactor [expr $i+1]]
 		[lindex $sourcesh $i] setEndDecay [lindex $decayfactor [expr $i+1]]
 	}
+	
+	Source_Unstr
 	
 	set unstrsolve [pw::Application begin UnstructuredSolver $smthd]
 	
