@@ -52,7 +52,7 @@ proc CAD_Read { } {
 		puts "2-D 30P-30N MULTI-ELEMENT AIRFOIL: this part hasn't finished yet, please switch to CRMHL-2D!"
 		exit -1
 	} else {
-		puts "PLEASE SELECT THE RIGHT airfoil!"
+		puts "PLEASE SELECT THE RIGHT AIRFOIL!"
 		exit -1
 	}
 
