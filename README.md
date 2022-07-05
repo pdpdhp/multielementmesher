@@ -12,7 +12,7 @@ To generate a mesh you can run CRM2DMesher.glf with Pointwise in batch mode. Inp
 pointwise -b CRM2DMesher.glf <?customized_meshpara.template?>
 ```
 
-After the mesh is complete, you can see summary of CAE export in CAE_export.out. Grid with indicated format will be saved in the grids directory.
+After the mesh is complete, you can see summary of CAE export in CAE_export.out. Grid with indicated format will be saved in the grids directory. This repository works with version 18.4R4 and it is not updated for upper versions.
 
 #### Grid guideline:
 Grid guideline specifications are calculated based on the flow condition in the gridflowprop.py in the guideline directory automatically during the grid generation process based on the grid input. To change grid specification, you can change target y+, boundary layer block growth rate, chordwise spacing, trailing spacing ratio, number of points at trailing edge, explicit, implicit, and volume factors for normal extrusion, and extrusion steps at the end of the customized_meshpara.template as your input file for different levels of grid refinement. If you set HO_GEN to YES then grid specification is adjusted based on the target y+ and boundary layer cell growth rate for high order meshes. Later to review these parameters, you may refer to guideline directory and check the grid specification files.
